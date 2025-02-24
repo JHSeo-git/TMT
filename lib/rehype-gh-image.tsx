@@ -41,7 +41,7 @@ export default function rehypeGithubImageRedirect() {
             }
 
             // @ts-expect-error doesn't recognize mdxJsxFlowElement's attributes
-            const srcAttribute = node.attributes.find((a) => a.name === "src")
+            const srcAttribute = node.attributes?.find((a) => a.name === "src")
             if (srcAttribute) {
               srcAttribute.value = resolvedSrc
             }
