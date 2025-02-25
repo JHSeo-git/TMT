@@ -175,21 +175,8 @@ export async function getIssuePagination(pageNo = 1, pageRow = 20) {
   }
 }
 
-export async function resolveImageUrl(path: string) {
-  try {
-    const response = await fetch(path, {
-      method: "HEAD",
-      redirect: "manual",
-      headers: { Authorization: `Bearer ${auth}` },
-    })
-
-    if (response.status !== 302) {
-      return
-    }
-
-    return response.headers.get("location")
-  } catch (error) {
-    console.error("failed to fetch(resolveImageUrl): ", error)
-    throw error
-  }
+export function resolveImageUrl(path: string) {
+  return `/api/github-image?url=${encodeURIComponent(path)}`
 }
+
+export const GITHUB_ASSET_URL_PREFIX = "https://github.com/user-attachments/assets"

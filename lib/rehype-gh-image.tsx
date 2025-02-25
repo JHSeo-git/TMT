@@ -1,12 +1,10 @@
 import type { Element, Root } from "hast"
 import { visit } from "unist-util-visit"
 
-import { resolveImageUrl } from "./github"
+import { GITHUB_ASSET_URL_PREFIX, resolveImageUrl } from "./github"
 
 export default function rehypeGithubImageRedirect() {
   return async (tree: Root) => {
-    const promises: Promise<void>[] = []
-
     visit(tree, "", (node: Element) => {
       if (node.type !== "element" && node.type !== "mdxJsxFlowElement") {
         return
@@ -25,33 +23,25 @@ export default function rehypeGithubImageRedirect() {
         return
       }
 
-      if (!src.startsWith("https://github.com/user-attachments/assets")) {
+      if (!src.startsWith(GITHUB_ASSET_URL_PREFIX)) {
         return
       }
 
-      promises.push(
-        resolveImageUrl(src)
-          .then((resolvedSrc) => {
-            if (!resolvedSrc) {
-              return
-            }
+      const resolvedSrc = resolveImageUrl(src)
 
-            if (node.properties) {
-              node.properties.src = resolvedSrc
-            }
+      if (!resolvedSrc) {
+        return
+      }
 
-            // @ts-expect-error doesn't recognize mdxJsxFlowElement's attributes
-            const srcAttribute = node.attributes?.find((a) => a.name === "src")
-            if (srcAttribute) {
-              srcAttribute.value = resolvedSrc
-            }
-          })
-          .catch((error) => {
-            console.error("Failed to fetch image redirect URL:", error)
-          })
-      )
+      if (node.properties) {
+        node.properties.src = resolvedSrc
+      }
+
+      // @ts-expect-error doesn't recognize mdxJsxFlowElement's attributes
+      const srcAttribute = node.attributes?.find((a) => a.name === "src")
+      if (srcAttribute) {
+        srcAttribute.value = resolvedSrc
+      }
     })
-
-    await Promise.all(promises)
   }
 }
