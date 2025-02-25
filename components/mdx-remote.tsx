@@ -2,7 +2,8 @@ import { MDXRemote } from "next-mdx-remote/rsc"
 import rehypePrettyCode, { Options } from "rehype-pretty-code"
 import remarkGfm from "remark-gfm"
 
-import rehypeGithubImageRedirect from "@/lib/rehype-gh-image"
+import { GITHUB_ASSET_URL_PREFIX, resolveImageUrl } from "@/lib/github"
+import rehypeGhImage from "@/lib/rehype-gh-image"
 import { cn } from "@/lib/utils"
 
 const components = {
@@ -75,10 +76,27 @@ const components = {
   blockquote: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <blockquote className={cn("mt-6 border-l-2 pl-6 italic", className)} {...props} />
   ),
-  img: ({ className, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img className={cn("rounded-md", className)} alt={alt} {...props} />
-  ),
+  img: ({
+    className,
+    alt,
+    src,
+    loading = "lazy",
+    ...props
+  }: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    const imageSrc = src?.startsWith(GITHUB_ASSET_URL_PREFIX) ? resolveImageUrl(src) : src
+
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        className={cn("rounded-sm", className)}
+        alt={alt}
+        src={imageSrc}
+        loading={loading}
+        {...props}
+      />
+    )
+  },
+
   hr: ({ ...props }: React.HTMLAttributes<HTMLHRElement>) => (
     <hr className="border-t-border mx-auto my-14 w-10 border-t md:my-12" {...props} />
   ),
@@ -144,7 +162,7 @@ export function Mdx({ code }: MdxProps) {
         mdxOptions: {
           remarkPlugins: [remarkGfm],
           rehypePlugins: [
-            rehypeGithubImageRedirect,
+            rehypeGhImage,
             [
               rehypePrettyCode,
               {

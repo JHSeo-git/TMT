@@ -1,7 +1,6 @@
 import "./globals.css"
 
 import type { Metadata } from "next"
-import { Geist_Mono } from "next/font/google"
 import localFont from "next/font/local"
 import { ViewTransitions } from "next-view-transitions"
 
@@ -14,9 +13,10 @@ const pretendard = localFont({
   variable: "--font-family-sans",
 })
 
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
+const geistMono = localFont({
+  src: "./GeistMonoVariable.woff2",
   display: "swap",
+  weight: "100 900",
   variable: "--font-geist-mono",
 })
 
@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <ViewTransitions>
       <html lang="ko">
-        <body className={cn("antialiased", pretendard.className, geistMono.variable)}>
+        <body className={cn("antialiased", pretendard.variable, geistMono.variable)}>
           <div className="bg-background text-foreground flex min-h-screen flex-col justify-between p-8 pt-0 pb-0 md:pt-8">
             <main className="mx-auto w-full max-w-[60ch]">{children}</main>
             <Footer />
