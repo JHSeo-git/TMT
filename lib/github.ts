@@ -34,6 +34,7 @@ export async function getAllIssues() {
       state: "open",
       sort: "created",
       direction: "desc",
+      per_page: 100,
       // TODO: config로 분리
       labels: "learn",
     })
