@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation"
 import { Link } from "next-view-transitions"
 
-import { config, getAllIssues } from "@/lib/github"
+import { config, getIssues } from "@/lib/github"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
 export default async function Page() {
-  const issues = await getAllIssues()
+  const { issues } = await getIssues()
 
   if (!issues) {
     return notFound()

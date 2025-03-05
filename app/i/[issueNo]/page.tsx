@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import { SquarePen } from "lucide-react"
 import { Link } from "next-view-transitions"
 
-import { getAllIssues, getIssueByNo } from "@/lib/github"
+import { getIssueByNo, getIssues } from "@/lib/github"
 import { Mdx } from "@/components/mdx-remote"
 
 interface PageParams {
@@ -10,7 +10,7 @@ interface PageParams {
 }
 
 export async function generateStaticParams(): Promise<PageParams[]> {
-  const issues = await getAllIssues()
+  const { issues } = await getIssues()
 
   return issues.map((issue) => ({
     issueNo: issue.number.toString(),
