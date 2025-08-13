@@ -254,3 +254,27 @@ input[type="email"] {
     cursor: pointer;
   }
 }
+
+@layer markdown {
+  .markdown-body {
+    sup {
+      a[data-footnote-ref="true"] {
+        @apply text-link;
+        &::before {
+          content: "[";
+        }
+        &::after {
+          content: "]";
+        }
+      }
+    }
+
+    .footnotes {
+      @apply text-foreground/90 mt-6 border-t text-xs;
+
+      a[data-footnote-backref] {
+        @apply no-underline;
+      }
+    }
+  }
+}

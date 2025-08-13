@@ -36,7 +36,7 @@ export default async function IssuePage({ params }: PageProps) {
   }
 
   return (
-    <article className="my-10">
+    <article className="markdown-body my-10">
       <h1 className="font-heading mt-2 scroll-m-20 text-xl font-bold">{response.title}</h1>
       <Link href=".." className="text-link text-sm font-medium">
         TMT
