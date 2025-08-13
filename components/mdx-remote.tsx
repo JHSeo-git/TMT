@@ -83,7 +83,10 @@ const components = {
     loading = "lazy",
     ...props
   }: React.ImgHTMLAttributes<HTMLImageElement>) => {
-    const imageSrc = src?.startsWith(GITHUB_ASSET_URL_PREFIX) ? resolveImageUrl(src) : src
+    const imageSrc =
+      typeof src === "string" && src.startsWith(GITHUB_ASSET_URL_PREFIX)
+        ? resolveImageUrl(src)
+        : src
 
     return (
       // eslint-disable-next-line @next/next/no-img-element
