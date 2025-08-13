@@ -54,7 +54,9 @@ export default async function IssuePage({ params }: PageProps) {
         <p className="hidden text-sm sm:block">
           <em>Last updated on </em>
           {/* TODO: toLocaleString locale */}
-          <strong>{new Date(response.updatedAt).toLocaleString("ko-KR")}</strong>
+          <strong>
+            {new Date(response.updatedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}
+          </strong>
         </p>
       </div>
     </article>
