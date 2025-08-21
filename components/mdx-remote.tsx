@@ -1,10 +1,13 @@
-import { MDXRemote } from "next-mdx-remote/rsc"
+import { MDXRemote } from "next-mdx-remote-client/rsc"
+import recmaMdxHtmlOverride from "recma-mdx-html-override"
 import rehypePrettyCode, { Options } from "rehype-pretty-code"
 import remarkGfm from "remark-gfm"
 
 import { GITHUB_ASSET_URL_PREFIX, resolveImageUrl } from "@/lib/github"
 import rehypeGhImage from "@/lib/rehype-gh-image"
 import { cn } from "@/lib/utils"
+
+import { Zoom } from "./zoom"
 
 const components = {
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -89,14 +92,10 @@ const components = {
         : src
 
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        className={cn("rounded-sm", className)}
-        alt={alt}
-        src={imageSrc}
-        loading={loading}
-        {...props}
-      />
+      <Zoom>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className={cn(className)} alt={alt} src={imageSrc} loading={loading} {...props} />
+      </Zoom>
     )
   },
 
@@ -173,6 +172,14 @@ export function Mdx({ code }: MdxProps) {
                 defaultLang: "bash",
                 bypassInlineCode: true,
               } satisfies Options,
+            ],
+          ],
+          recmaPlugins: [
+            [
+              recmaMdxHtmlOverride,
+              {
+                tags: "img",
+              },
             ],
           ],
         },
