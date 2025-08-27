@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 
 @plugin 'tailwindcss-animate';
 
@@ -183,24 +185,6 @@ input[type="email"] {
   appearance: none;
 }
 
-[data-rehype-pretty-code-figure] code {
-  border-radius: 0;
-  border: 0;
-  padding: 0;
-  min-width: 100%;
-  overflow-wrap: break-word;
-  background-color: transparent;
-  counter-reset: line;
-  box-decoration-break: clone;
-}
-
-[data-rehype-pretty-code-figure] [data-line] {
-  display: inline-block;
-  min-height: 1rem;
-  width: 100%;
-  padding: 0.125rem 1rem;
-}
-
 @supports (view-transition-name: none) {
   @media not (prefers-reduced-motion: reduce) {
     article {
@@ -257,6 +241,8 @@ input[type="email"] {
 
 @layer markdown {
   .markdown-body {
+    --default-mono-font-family: var(--font-geist-mono);
+
     sup {
       a[data-footnote-ref="true"] {
         @apply text-link;

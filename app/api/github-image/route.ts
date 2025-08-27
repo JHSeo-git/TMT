@@ -21,10 +21,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "GitHub Image Fetch Failed" }, { status: response.status })
     }
 
-    const buffer = await response.arrayBuffer()
+    // const buffer = await response.arrayBuffer()
     const contentType = response.headers.get("Content-Type") || "image/png"
 
-    return new NextResponse(Buffer.from(buffer), {
+    return new NextResponse(response.body, {
+      status: response.status,
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=3600, immutable",
