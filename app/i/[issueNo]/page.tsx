@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { AnchorProvider } from "fumadocs-core/toc"
 import defaultComponents from "fumadocs-ui/mdx"
-import { SquarePen, Text } from "lucide-react"
+import { ArrowUpLeft, SquarePen, Text } from "lucide-react"
 import { Link } from "next-view-transitions"
 
 import { getIssueByNo, getIssues } from "@/lib/github"
@@ -94,6 +94,19 @@ export default async function IssuePage({ params }: PageProps) {
             </strong>
           </p>
         </div>
+
+        <PageNavigate>
+          <div className="mt-8 flex flex-col justify-end gap-2">
+            <Link
+              href=".."
+              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 italic"
+            >
+              <ArrowUpLeft />
+              <span>Index</span>
+            </Link>
+          </div>
+        </PageNavigate>
+
         <PageToc>
           <h3 className="text-muted-foreground mb-1 flex items-center gap-1 text-sm">
             <Text className="size-4" />
@@ -106,12 +119,21 @@ export default async function IssuePage({ params }: PageProps) {
   )
 }
 
+function PageNavigate({ className, children, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div className={cn("absolute top-0 -left-[143px] max-xl:hidden", className)} {...props}>
+      <div className="fixed top-0 flex h-full max-w-full flex-col pt-18 pb-6">{children}</div>
+    </div>
+  )
+}
+
 function PageToc({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
-    <div className={cn("absolute top-0 left-full ml-10 h-dvh max-xl:hidden", className)} {...props}>
-      <div className="fixed top-0 flex h-full w-[286px] max-w-full flex-col pt-18 pb-6">
-        {children}
-      </div>
+    <div
+      className={cn("absolute top-0 left-full ml-10 h-dvh w-[286px] max-xl:hidden", className)}
+      {...props}
+    >
+      <div className="fixed top-0 flex h-full max-w-full flex-col pt-18 pb-6">{children}</div>
     </div>
   )
 }

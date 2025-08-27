@@ -91,7 +91,7 @@ export const components = {
         : src
 
     return (
-      <Zoom>
+      <Zoom wrapElement="span">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className={cn(className)} alt={alt} src={imageSrc} loading={loading} {...props} />
       </Zoom>
