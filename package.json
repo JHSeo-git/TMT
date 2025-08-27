@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@fumadocs/mdx-remote": "^1.4.0",
-    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
@@ -28,8 +28,8 @@
     "fumadocs-core": "^15.7.2",
     "fumadocs-ui": "^15.7.2",
     "hast": "^1.0.0",
-    "lucide-react": "^0.539.0",
-    "next": "15.4.6",
+    "lucide-react": "^0.542.0",
+    "next": "15.5.2",
     "next-view-transitions": "^0.3.4",
     "octokit": "^5.0.3",
     "react": "^19.1.1",
@@ -42,21 +42,24 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.33.0",
-    "@ianvs/prettier-plugin-sort-imports": "^4.6.1",
-    "@tailwindcss/postcss": "4.1.11",
+    "@eslint/js": "^9.34.0",
+    "@ianvs/prettier-plugin-sort-imports": "^4.6.2",
+    "@tailwindcss/postcss": "4.1.12",
     "@types/hast": "^3.0.4",
-    "@types/node": "^24.2.1",
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
-    "eslint": "^9.33.0",
-    "eslint-config-next": "15.4.6",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.11",
+    "@types/react-dom": "^19.1.8",
+    "eslint": "^9.34.0",
+    "eslint-config-next": "15.5.2",
     "eslint-config-prettier": "^10.1.8",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "prettier-plugin-packagejson": "^2.5.19",
     "prettier-plugin-tailwindcss": "^0.6.14",
-    "tailwindcss": "4.1.11",
-    "typescript": "^5.8.3"
-  }
+    "tailwindcss": "4.1.12",
+    "typescript": "^5.9.2"
+  },
+  "trustedDependencies": [
+    "@tailwindcss/oxide"
+  ]
 }
