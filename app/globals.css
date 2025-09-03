@@ -185,7 +185,7 @@ input[type="email"] {
   appearance: none;
 }
 
-@supports (view-transition-name: none) {
+/* @supports (view-transition-name: none) {
   @media not (prefers-reduced-motion: reduce) {
     article {
       view-transition-name: crossfade;
@@ -224,7 +224,7 @@ input[type="email"] {
     opacity: 1;
     filter: blur();
   }
-}
+} */
 
 @layer base {
   * {
