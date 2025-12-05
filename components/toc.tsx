@@ -1,7 +1,9 @@
+// TODO: update to https://github.com/fuma-nama/fumadocs/blob/dev/packages/ui/src/components/toc/default.tsx
+
 "use client"
 
 import { useLayoutEffect, useRef, useState } from "react"
-import type { TOCItemType } from "fumadocs-core/server"
+import type { TOCItemType } from "fumadocs-core/toc"
 import * as Primitive from "fumadocs-core/toc"
 import { ScrollArea, ScrollViewport } from "fumadocs-ui/components/ui/scroll-area"
 
@@ -75,7 +77,7 @@ export function TocItems({
   return (
     <ScrollArea className={cn("flex flex-col pr-6", isMenu && "-ms-3")}>
       <ScrollViewport
-        className="text-fd-muted-foreground relative min-h-0 [mask-image:linear-gradient(to_bottom,transparent,white_16px,white_calc(100%-16px),transparent)] py-3 text-sm"
+        className="text-fd-muted-foreground relative min-h-0 mask-[linear-gradient(to_bottom,transparent,white_16px,white_calc(100%-16px),transparent)] py-3 text-sm"
         ref={containerRef}
       >
         {svg ? (
@@ -147,7 +149,7 @@ function TOCItem({
       style={{
         paddingInlineStart: `${getItemOffset(item.depth)}px`,
       }}
-      className="data-[active=true]:text-fd-primary relative py-2 [overflow-wrap:anywhere] transition-colors first:pt-0 last:pb-0"
+      className="data-[active=true]:text-fd-primary relative py-2 wrap-anywhere transition-colors first:pt-0 last:pb-0"
     >
       {offset !== upperOffset ? (
         <svg
@@ -190,6 +192,7 @@ export function useTocThumb(containerRef: React.RefObject<HTMLElement | null>): 
   useLayoutEffect(() => {
     const container = containerRef.current
     if (active.length === 0 || !container || container.clientHeight === 0) {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       setPos([0, 0])
       return
     }
