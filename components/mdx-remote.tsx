@@ -2,8 +2,9 @@ import { createCompiler } from "@fumadocs/mdx-remote"
 import { remarkImage } from "fumadocs-core/mdx-plugins"
 import recmaMdxHtmlOverride from "recma-mdx-html-override"
 
-import { GITHUB_ASSET_URL_PREFIX, resolveImageUrl } from "@/lib/github"
+import { GITHUB_ASSET_URL_PREFIX, resolveAssetUrl } from "@/lib/github"
 import rehypeGhImage from "@/lib/rehype-gh-image"
+import rehypeGhVideo from "@/lib/rehype-gh-video"
 import { cn } from "@/lib/utils"
 
 import { Zoom } from "./zoom"
@@ -90,7 +91,7 @@ export const components = {
   }: React.ImgHTMLAttributes<HTMLImageElement>) => {
     const imageSrc =
       typeof src === "string" && src.startsWith(GITHUB_ASSET_URL_PREFIX)
-        ? resolveImageUrl(src)
+        ? resolveAssetUrl(src)
         : src
 
     return (
@@ -98,6 +99,41 @@ export const components = {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className={cn(className)} alt={alt} src={imageSrc} loading={loading} {...props} />
       </Zoom>
+    )
+  },
+  video: ({
+    className,
+    src,
+    autoPlay = true,
+    loop = true,
+    muted = true,
+    controls = true,
+    playsInline = true,
+    ...props
+  }: React.VideoHTMLAttributes<HTMLVideoElement>) => {
+    return (
+      <video
+        className={cn(
+          "relative left-1/2 my-4 block h-auto w-screen -translate-x-1/2 rounded-md border",
+          className
+        )}
+        src={src}
+        autoPlay={autoPlay}
+        loop={loop}
+        controls={controls}
+        muted={muted}
+        playsInline={playsInline}
+        {...props}
+      >
+        {typeof src === "string" && (
+          <>
+            <source src={src} type="video/mp4" />
+            <p className="text-muted-foreground text-sm">
+              Your browser does not support the video tag.
+            </p>
+          </>
+        )}
+      </video>
     )
   },
 
@@ -108,12 +144,12 @@ export const components = {
 
 export const compiler = createCompiler({
   remarkPlugins: [[remarkImage, { onError: "ignore" }]],
-  rehypePlugins: [rehypeGhImage],
+  rehypePlugins: [rehypeGhImage, rehypeGhVideo],
   recmaPlugins: [
     [
       recmaMdxHtmlOverride,
       {
-        tags: "img",
+        tags: ["img", "video"],
       },
     ],
   ],

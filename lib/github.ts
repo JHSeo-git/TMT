@@ -137,8 +137,8 @@ export async function getIssueByNo(issueNo: number) {
   }
 }
 
-export function resolveImageUrl(path: string) {
-  return `/api/github-image?url=${encodeURIComponent(path)}`
+export function resolveAssetUrl(path: string) {
+  return `/api/github-asset?url=${encodeURIComponent(path)}`
 }
 
 export const GITHUB_ASSET_URL_PREFIX = "https://github.com/user-attachments/assets"

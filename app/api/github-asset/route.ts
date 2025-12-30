@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     })
 
     if (!response.ok) {
-      return NextResponse.json({ error: "GitHub Image Fetch Failed" }, { status: response.status })
+      return NextResponse.json({ error: "GitHub Asset Fetch Failed" }, { status: response.status })
     }
 
     // const buffer = await response.arrayBuffer()
@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("GitHub Image Proxy Error:", error)
+    console.error("GitHub Asset Proxy Error:", error)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }
+

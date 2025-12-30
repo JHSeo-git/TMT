@@ -3,22 +3,26 @@ import { visit } from "unist-util-visit"
 
 import { GITHUB_ASSET_URL_PREFIX, resolveAssetUrl } from "./github"
 
-export default function rehypeGithubImageRedirect() {
+export default function rehypeGithubVideoRedirect() {
   return async (tree: Root) => {
     visit(tree, "", (node: Element) => {
-      if (node.type !== "element" && node.type !== "mdxJsxFlowElement") {
+      if (
+        node.type !== "element" &&
+        node.type !== "mdxJsxFlowElement" &&
+        node.type !== "mdxJsxTextElement"
+      ) {
         return
       }
 
       // @ts-expect-error doesn't recognize mdxJsxFlowElement's name
-      const isImageNode = node.tagName === "img" || node.name === "img"
+      const isVideoNode = node.tagName === "video" || node.name === "video"
 
-      if (!isImageNode) {
+      if (!isVideoNode) {
         return
       }
 
       // @ts-expect-error doesn't recognize mdxJsxFlowElement's attributes
-      const src = node.properties?.src ?? node.attributes.find((a) => a.name === "src")?.value
+      const src = node.properties?.src ?? node.attributes?.find((a) => a.name === "src")?.value
       if (typeof src !== "string") {
         return
       }
