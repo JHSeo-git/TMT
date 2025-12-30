@@ -53,12 +53,15 @@ export const components = {
   ),
   a: ({ className, ...props }: React.HTMLAttributes<HTMLAnchorElement>) => (
     <a
-      className={cn("font-medium break-words underline decoration-1 underline-offset-4", className)}
+      className={cn(
+        "font-medium wrap-break-word underline decoration-1 underline-offset-4",
+        className
+      )}
       {...props}
     />
   ),
   p: ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-    <p className={cn("leading-7 [&:not(:first-child)]:mt-6", className)} {...props} />
+    <p className={cn("leading-7 not-first:mt-6", className)} {...props} />
   ),
   // ul: ({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
   //   <ul
