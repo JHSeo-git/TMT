@@ -11,8 +11,8 @@ import {
 } from "react"
 import * as Primitive from "fumadocs-core/toc"
 import { useOnChange } from "fumadocs-core/utils/use-on-change"
-import { mergeRefs } from "fumadocs-ui/utils/merge-refs"
 
+import { mergeRefs } from "@/lib/merge-refs"
 import { cn } from "@/lib/utils"
 
 const TOCContext = createContext<Primitive.TOCItemType[]>([])

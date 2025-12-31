@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, type ComponentProps } from "react"
 import * as Primitive from "fumadocs-core/toc"
-import { mergeRefs } from "fumadocs-ui/utils/merge-refs"
 
+import { mergeRefs } from "@/lib/merge-refs"
 import { cn } from "@/lib/utils"
 
 import { TocThumb, useTOCItems } from "./toc"
