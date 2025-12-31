@@ -1,14 +1,14 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { AnchorProvider } from "fumadocs-core/toc"
 import defaultComponents from "fumadocs-ui/mdx"
 import { ArrowUpLeft, SquarePen, Text } from "lucide-react"
 import { Link } from "next-view-transitions"
 
 import { getIssueByNo, getIssues } from "@/lib/github"
 import { cn } from "@/lib/utils"
+import { TOCItems } from "@/components/clerk"
 import { compiler, components } from "@/components/mdx-remote"
-import { TocItems } from "@/components/toc"
+import { TOCProvider, TOCScrollArea } from "@/components/toc"
 
 interface PageParams {
   issueNo: string
@@ -65,7 +65,7 @@ export default async function IssuePage({ params }: PageProps) {
   })
 
   return (
-    <AnchorProvider toc={toc}>
+    <TOCProvider toc={toc}>
       <div className="relative">
         <article className="markdown-body prose my-10">
           <h1 className="not-prose font-heading mt-2 scroll-m-20 text-xl font-bold">
@@ -112,10 +112,12 @@ export default async function IssuePage({ params }: PageProps) {
             <Text className="size-4" />
             <span className="font-semibold">On this Page</span>
           </h3>
-          <TocItems items={toc} />
+          <TOCScrollArea>
+            <TOCItems />
+          </TOCScrollArea>
         </PageToc>
       </div>
-    </AnchorProvider>
+    </TOCProvider>
   )
 }
 
