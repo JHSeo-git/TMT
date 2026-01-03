@@ -9,6 +9,23 @@ import { cn } from "@/lib/utils"
 
 import { Zoom } from "./zoom"
 
+function getVideoMimeType(src: string): string {
+  const extension = src.split(".").pop()?.toLowerCase().split("?")[0]
+
+  const mimeTypes: Record<string, string> = {
+    mp4: "video/mp4",
+    webm: "video/webm",
+    ogg: "video/ogg",
+    ogv: "video/ogg",
+    mov: "video/quicktime",
+    avi: "video/x-msvideo",
+    mkv: "video/x-matroska",
+    m4v: "video/x-m4v",
+  }
+
+  return mimeTypes[extension ?? ""] ?? "video/mp4"
+}
+
 export const components = {
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h1 className={cn("font-heading mt-2 scroll-m-20 text-2xl font-bold", className)} {...props} />
@@ -127,7 +144,7 @@ export const components = {
       >
         {typeof src === "string" && (
           <>
-            <source src={src} type="video/mp4" />
+            <source src={src} type={getVideoMimeType(src)} />
             <p className="text-muted-foreground text-sm">
               Your browser does not support the video tag.
             </p>
