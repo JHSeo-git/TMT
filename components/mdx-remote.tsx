@@ -1,5 +1,6 @@
 import { createCompiler } from "@fumadocs/mdx-remote"
 import { remarkImage } from "fumadocs-core/mdx-plugins"
+import { Tweet as ReactTweet } from "react-tweet"
 import recmaMdxHtmlOverride from "recma-mdx-html-override"
 
 import { GITHUB_ASSET_URL_PREFIX, resolveAssetUrl } from "@/lib/github"
@@ -153,10 +154,10 @@ export const components = {
       </video>
     )
   },
-
   hr: ({ ...props }: React.HTMLAttributes<HTMLHRElement>) => (
     <hr className="border-t-border mx-auto my-14 w-10 border-t md:my-12" {...props} />
   ),
+  Tweet: (props: React.ComponentProps<typeof ReactTweet>) => <ReactTweet {...props} />,
 }
 
 export const compiler = createCompiler({

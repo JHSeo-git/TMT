@@ -34,6 +34,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-medium-image-zoom": "^5.4.0",
+    "react-tweet": "^3.3.0",
     "recma-mdx-html-override": "^1.1.2",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
