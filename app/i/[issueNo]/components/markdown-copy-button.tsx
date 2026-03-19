@@ -4,9 +4,8 @@ import { ComponentProps, useState } from "react"
 import { Check, Copy } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-
-import { buttonVariants } from "../../../../components/ui/button"
-import { useCopyButton } from "../../../../components/use-copy-button"
+import { buttonVariants } from "@/components/ui/button"
+import { useCopyButton } from "@/components/use-copy-button"
 
 export function MarkdownCopyButton({
   markdown,
