@@ -10,6 +10,9 @@ import { TOCItems } from "@/components/clerk"
 import { compiler, components } from "@/components/mdx-remote"
 import { TOCProvider, TOCScrollArea } from "@/components/toc"
 
+import { MarkdownCopyButton } from "./components/markdown-copy-button"
+import { UrlShareButton } from "./components/url-share-button"
+
 interface PageParams {
   issueNo: string
 }
@@ -74,6 +77,10 @@ export default async function IssuePage({ params }: PageProps) {
           <Link href=".." className="not-prose text-link text-sm font-medium">
             TMT
           </Link>
+          <div className="flex flex-row flex-wrap justify-end gap-2 py-4">
+            <MarkdownCopyButton markdown={response.body ?? ""} className="text-xs" />
+            <UrlShareButton className="text-xs" />
+          </div>
           <MdxContent components={{ ...defaultComponents, ...components }} />
         </article>
 
