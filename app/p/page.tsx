@@ -46,7 +46,7 @@ export default async function Page() {
                     {label.name}
                   </span>
                 ))}
-                <time className="text-foreground/50 group-hover:text-foreground block self-start text-sm tracking-tighter tabular-nums transition-colors group-hover:transition-none">
+                <time className="text-foreground/50 group-hover:text-foreground block text-sm tracking-tighter tabular-nums transition-colors group-hover:transition-none">
                   {formatDate(issue.createdAt)}
                 </time>
               </Link>
