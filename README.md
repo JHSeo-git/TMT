@@ -1,3 +1,3 @@
 # TMT
 
-- https://taking-my-time.vercel.app/
+- https://tmt.seonest.net/
