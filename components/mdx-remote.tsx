@@ -1,5 +1,6 @@
 import { createCompiler } from "@fumadocs/mdx-remote"
 import { remarkImage } from "fumadocs-core/mdx-plugins"
+import { Tweet as ReactTweet } from "react-tweet"
 import recmaMdxHtmlOverride from "recma-mdx-html-override"
 
 import { GITHUB_ASSET_URL_PREFIX, resolveAssetUrl } from "@/lib/github"
@@ -7,7 +8,6 @@ import rehypeGhImage from "@/lib/rehype-gh-image"
 import rehypeGhVideo from "@/lib/rehype-gh-video"
 import { cn } from "@/lib/utils"
 
-import { MdxTweet } from "./mdx-tweet"
 import { Zoom } from "./zoom"
 
 function getVideoMimeType(src: string): string {
@@ -157,7 +157,7 @@ export const components = {
   hr: ({ ...props }: React.HTMLAttributes<HTMLHRElement>) => (
     <hr className="border-t-border mx-auto my-14 w-10 border-t md:my-12" {...props} />
   ),
-  Tweet: MdxTweet,
+  Tweet: (props: React.ComponentProps<typeof ReactTweet>) => <ReactTweet {...props} />,
 }
 
 export const compiler = createCompiler({
