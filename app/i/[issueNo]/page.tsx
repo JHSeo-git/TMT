@@ -130,8 +130,8 @@ export default async function IssuePage({ params }: PageProps) {
 
 function PageNavigate({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
-    <div className={cn("absolute top-0 -left-[143px] max-xl:hidden", className)} {...props}>
-      <div className="fixed top-0 flex h-full max-w-full flex-col pt-18 pb-6">{children}</div>
+    <div className={cn("absolute top-0 left-[-143px] max-xl:hidden", className)} {...props}>
+      <div className="fixed top-0 flex h-full max-w-full flex-col pt-18 pr-5 pb-6">{children}</div>
     </div>
   )
 }
@@ -142,7 +142,7 @@ function PageToc({ className, children, ...props }: React.ComponentProps<"div">)
       className={cn("absolute top-0 left-full ml-10 h-dvh w-[286px] max-xl:hidden", className)}
       {...props}
     >
-      <div className="fixed top-0 flex h-full max-w-full flex-col pt-18 pb-6">{children}</div>
+      <div className="fixed top-0 flex h-full max-w-full flex-col pt-18 pr-5 pb-6">{children}</div>
     </div>
   )
 }
