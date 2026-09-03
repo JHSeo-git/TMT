@@ -21,7 +21,7 @@
     "@base-ui/react": "^1.7.0",
     "@fumadocs/mdx-remote": "^1.5.1",
     "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
+    "cn": "^0.2.4",
     "fumadocs-core": "^16.15.4",
     "fumadocs-ui": "^16.15.4",
     "hast": "^1.0.0",
@@ -34,7 +34,6 @@
     "react-medium-image-zoom": "^5.4.9",
     "react-tweet": "^3.3.1",
     "recma-mdx-html-override": "^1.1.6",
-    "tailwind-merge": "^3.6.0",
     "tailwindcss-animate": "^1.0.7",
     "unist-util-visit": "^5.1.0"
   },
