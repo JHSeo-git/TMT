@@ -22,6 +22,8 @@ workflow has to live in `TMT-items`, where the issue events happen, so that repo
 pointer to this set of documents and the actual explanation is maintained here alone. Copying the
 same content into both places guarantees they drift.
 
-`docs/generate/` is where agent output used to be parked, and its contents are already stale — it
-records the site's name as "Taking My Time" when the actual name is "Too many thoughts". Generated
-output and deliberately kept records will not share a directory going forward.
+`docs/generate/` used to park agent output, and its contents had gone stale — it recorded the
+site's name as "Taking My Time" when the actual name is "Too many thoughts", and it described the
+`/i` route as an image store when that route renders an item. It was removed rather than corrected
+or translated: a generated snapshot of the codebase competes with the codebase for authority and
+loses every time. Generated output and deliberately kept records do not share a directory.
