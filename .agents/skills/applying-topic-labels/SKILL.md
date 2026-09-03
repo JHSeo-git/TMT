@@ -1,73 +1,78 @@
 ---
 name: applying-topic-labels
-description: "Use when TMT 아카이브 아이템에 주제 라벨이 필요할 때 — secondthought/needs-topic 큐를 비우거나, 특정 이슈의 주제를 판정하거나, TMT-items 전체에 topic 라벨을 백필할 때."
+description: "Use when items in the TMT archive need topic labels — draining the secondthought/needs-topic queue, deciding a single issue's subject, or backfilling topic labels across TMT-items."
 ---
 
-# 주제 라벨 붙이기
+# Applying Topic Labels
 
-`JHSeo-git/TMT-items`의 아이템을 읽고 주제를 판정해 `topic/` 라벨을 붙입니다. 이 일은 앞으로
-`secondthought` 에이전트가 GitHub Action에서 맡을 예정이고, 지금은 같은 작업을 로컬에서 손으로
-돌리는 형태입니다. 그래서 라벨 이름에는 에이전트 이름이 들어가지만 스킬 이름에는 들어가지
-않습니다 — 스킬은 작업이고 `secondthought`는 그 작업을 자동으로 하게 될 주체입니다.
+Reads items in `JHSeo-git/TMT-items`, decides what each one is about, and applies a `topic/` label.
+A `secondthought` agent will eventually do this from a GitHub Action; for now the same work runs
+locally by hand. That is why the agent's name appears in the label namespace but not in the skill
+name — the skill is the work, `secondthought` is what will do the work automatically.
 
-**판정 기준은 `docs/design/topic-taxonomy.md`가 단일 출처입니다. 라벨을 하나라도 붙이기 전에
-그 문서를 읽으세요.** 8개 카테고리의 정의, 충돌 시 우선순위, 실제 이슈 번호가 붙은 경계 사례가
-거기 있습니다. 이 파일에 그 내용을 복사하지 마세요 — 두 곳에 있으면 반드시 어긋납니다.
+**`docs/design/topic-taxonomy.md` is the single source of truth for how to decide. Read it before
+applying a single label.** It holds the eight category definitions, the priority order for
+conflicts, and boundary cases pinned to real issue numbers. That document is written in Korean.
+Do not copy any of it into this file — two copies always drift.
 
-## 라벨 경계
+## Label boundaries
 
-이름에 `/`가 들어간 라벨만 건드립니다. `published`, `draft`, `secret`처럼 접두 없는 라벨은
-사람의 것이고, 발행 여부를 판단하는 것은 이 스킬의 일이 아닙니다.
+Only touch labels whose name contains a `/`. Unprefixed labels (`published`, `draft`, `secret`)
+belong to a human, and deciding whether something gets published is not this skill's job.
 
-분류 대상은 `published`를 가진 아이템뿐입니다. 게이트를 통과하지 않은 아이템은 사이트에 실리지
-않으므로 주제가 필요 없고, 이력서나 여행 기록처럼 주제 축과 아예 무관한 것이 대부분입니다.
+Only items carrying `published` are in scope. An item that has not passed the gate never reaches
+the site, so it needs no topic — and most of those (a résumé, a travel note) fall outside the topic
+axis entirely.
 
-## 명령
+## Commands
 
-저장소 루트에서 실행합니다. bun이 `.env`의 `GITHUB_TOKEN`/`GITHUB_OWNER`/`GITHUB_REPO`를
-자동으로 읽습니다.
+Run from the repository root. Bun picks up `GITHUB_TOKEN`, `GITHUB_OWNER`, and `GITHUB_REPO` from
+`.env` automatically.
 
 ```
-bun run .agents/skills/applying-topic-labels/scripts/queue.ts <명령>
+bun run .agents/skills/applying-topic-labels/scripts/queue.ts <command>
 ```
 
-| 명령 | 하는 일 |
+| Command | What it does |
 | --- | --- |
-| `status` | 분류 대상(발행된 아이템)의 주제있음·큐·건너뜀 건수 |
-| `enqueue [--dry-run]` | 발행된 아이템 중 주제도 건너뜀도 없는 것을 큐에 넣기 |
-| `list` | 큐에 있는 아이템의 번호와 제목 |
-| `show <번호> [글자수]` | 판정용 본문 (기본 4000자) |
-| `apply <번호> <주제...>` | 주제 라벨 부착 + 큐에서 제거 |
-| `skip <번호>` | 판정 불가로 표시 + 큐에서 제거 |
+| `status` | Counts across in-scope items: labeled, queued, skipped |
+| `enqueue [--dry-run]` | Queue published items that have neither a topic nor a skip |
+| `list` | Number and title of every queued item |
+| `show <number> [chars]` | Body text for deciding (4000 characters by default) |
+| `apply <number> <topic...>` | Add topic labels, then drop the item from the queue |
+| `skip <number>` | Mark as undecidable, then drop the item from the queue |
 
-정의되지 않은 주제 이름과 라벨 4개 이상은 스크립트가 거부합니다. 그 두 가지는 판단이 아니라
-기계적 제약이므로 외우지 않아도 됩니다.
+The script rejects unknown topic names and more than three labels. Both are mechanical constraints
+rather than judgment calls, so there is nothing to memorize.
 
-주제 목록 자체는 `lib/labels.ts`가 단일 출처입니다. 주제를 추가하거나 이름을 바꿀 때 거기만
-고치면 사이트 표시명과 이 스크립트의 유효성 검사가 함께 따라옵니다.
+The topic list itself lives in `lib/labels.ts` as its single source of truth. Adding or renaming a
+topic there carries the site's display names and this script's validation along with it.
 
-## 판정
+## Deciding
 
-아이템 하나에 **주 라벨 하나**를 정하고, 필요하면 보조 라벨을 최대 2개까지 더합니다. 주 라벨은
-"이 글은 결국 무엇에 관한 글인가"로 정합니다. 첫 번째 인자가 주 라벨입니다.
+Give each item exactly one **primary label**, plus up to two secondary labels when they are
+certain. Pick the primary by asking what the piece is ultimately about. The first argument is the
+primary label.
 
-제목만으로 판정하지 마세요. 이 아카이브의 아이템은 대부분 외부 글의 번역·요약이고, 제목에 든
-단어가 본론과 어긋나는 경우가 많습니다. 「2026년의 AI 에이전트 샌드박싱」은 제목에 에이전트가
-있지만 런타임 비교 글입니다. `show`로 본문 앞부분과 원문 URL을 보고 정하세요.
+Never decide from the title alone. Most items here are translations or summaries of outside
+writing, and the words in a title often pull away from the actual argument. #320
+"2026년의 AI 에이전트 샌드박싱" (AI agent sandboxing in 2026) carries "agent" in its title but is a
+runtime comparison. Use `show` to read the opening and the source URL before deciding.
 
-주제 축과 무관한 개인 기록이거나 본문이 비어 있으면 억지로 붙이지 말고 `skip`합니다. 큐에
-남겨 두면 큐가 영구히 비지 않습니다.
+When an item is a personal record outside the topic axis, or its body is empty, `skip` it rather
+than forcing a label onto it. Left in the queue, it keeps the queue from ever emptying.
 
-## 배치
+## Working through the queue
 
-`show` → `apply`를 한 건씩 처리합니다. 여러 건을 한 번에 훑고 라벨을 몰아 붙이면 본문을 안 읽고
-제목으로 판정하는 쪽으로 흐릅니다. 큐는 언제든 중단하고 이어받을 수 있으니 서두를 이유가 없습니다.
+Handle one item at a time: `show`, then `apply`. Scanning many at once and applying labels in a
+batch drifts toward deciding from titles without reading the bodies. The queue can be stopped and
+picked back up at any point, so there is no reason to hurry.
 
-## 흔한 실수
+## Common mistakes
 
-| 실수 | 왜 문제인가 |
+| Mistake | Why it hurts |
 | --- | --- |
-| 이미 붙은 주제 라벨을 다시 붙이기 | 라벨 재부착은 GitHub의 라벨 필터 색인을 어긋나게 만든 이력이 있습니다(ADR 0002의 #109). 바꿀 것만 바꾸세요. |
-| `gh issue list --label`로 큐를 세기 | 그 색인이 낡으면 아이템이 조용히 누락됩니다. `queue.ts`는 전수를 받아 직접 거릅니다. |
-| 주제를 "카테고리"라고 부르기 | `CONTEXT.md`가 이 축의 용어를 "주제"로 정하고 "카테고리"를 `_Avoid_`에 두었습니다. |
-| 애매해서 라벨 3개를 다 채우기 | 보조 라벨은 확실할 때만. 애매하면 주 라벨 하나로 두세요. |
+| Re-applying a topic label that is already there | Re-applying a label has thrown GitHub's label filter index out of sync before (ADR 0002, issue #109). Change only what needs changing. |
+| Counting the queue with `gh issue list --label` | When that index is stale, items go missing silently. `queue.ts` fetches every issue and filters locally. |
+| Calling a topic a "category" | `CONTEXT.md` fixes the term for this axis as 주제 (topic) and puts 카테고리 (category) under `_Avoid_`. |
+| Filling all three labels because the call is unclear | Secondary labels are for certainty. When it is unclear, leave the primary label on its own. |
