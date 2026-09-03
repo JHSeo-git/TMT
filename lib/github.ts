@@ -1,5 +1,7 @@
 import { Octokit } from "octokit"
 
+import { PUBLISH_GATE_LABEL } from "./labels"
+
 if (!process.env.GITHUB_TOKEN) {
   throw new Error("env.GITHUB_TOKEN is not set.")
 }
@@ -26,6 +28,31 @@ const octokit = new Octokit({
   auth,
 })
 
+type RestIssueLabels = Awaited<ReturnType<Octokit["rest"]["issues"]["get"]>>["data"]["labels"]
+
+interface LabelNode {
+  id: string
+  name: string
+  color: string
+}
+
+/**
+ * Normalizes an issue's labels into a shape the UI can render.
+ * A label in GitHub's response may be a bare string or carry no name at all, and a nameless label
+ * can neither be drawn nor classified, so it is filtered out here.
+ */
+function toLabelNodes(labels: RestIssueLabels): LabelNode[] {
+  return labels.flatMap((label) => {
+    if (typeof label === "string") {
+      return [{ id: label, name: label, color: "" }]
+    }
+    if (!label.name) {
+      return []
+    }
+    return [{ id: label.node_id ?? label.name, name: label.name, color: label.color ?? "" }]
+  })
+}
+
 interface GetIssuesParams {
   page?: number
   per_page?: number
@@ -39,8 +66,7 @@ export async function getIssues({ page = 1, per_page = 100 }: GetIssuesParams = 
       state: "open",
       sort: "created",
       direction: "desc",
-      // TODO: config로 분리
-      labels: "learn",
+      labels: PUBLISH_GATE_LABEL,
       page,
       per_page,
     })
@@ -51,11 +77,7 @@ export async function getIssues({ page = 1, per_page = 100 }: GetIssuesParams = 
       title: issue.title,
       createdAt: issue.created_at,
       labels: {
-        nodes: issue.labels.map((label) => ({
-          id: typeof label === "string" ? label : label.node_id,
-          name: typeof label === "string" ? label : label.name,
-          color: typeof label === "string" ? "" : label.color,
-        })),
+        nodes: toLabelNodes(issue.labels),
       },
     }))
 
@@ -114,11 +136,7 @@ export async function getIssueByNo(issueNo: number) {
       title: issue.title,
       createdAt: issue.created_at,
       labels: {
-        nodes: issue.labels.map((label) => ({
-          id: typeof label === "string" ? label : label.node_id,
-          name: typeof label === "string" ? label : label.name,
-          color: typeof label === "string" ? "" : label.color,
-        })),
+        nodes: toLabelNodes(issue.labels),
       },
       updatedAt: issue.updated_at,
       body: issue.body,

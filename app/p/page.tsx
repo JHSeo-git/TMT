@@ -38,14 +38,6 @@ export default async function Page() {
                   {issue.title}
                 </span>
                 <span className="flex-1 overflow-hidden"></span>
-                {issue.labels?.nodes?.map((label) => (
-                  <span
-                    key={label.id}
-                    className="hidden rounded-full bg-slate-100/40 px-2 text-xs leading-none font-medium whitespace-nowrap transition-colors group-hover:bg-slate-100 group-hover:transition-none sm:inline-block"
-                  >
-                    {label.name}
-                  </span>
-                ))}
                 <time className="text-foreground/50 group-hover:text-foreground block text-sm tracking-tighter tabular-nums transition-colors group-hover:transition-none">
                   {formatDate(issue.createdAt)}
                 </time>
