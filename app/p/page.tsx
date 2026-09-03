@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { Link } from "next-view-transitions"
 
 import { config, getIssues } from "@/lib/github"
+import { isTopicLabel, topicDisplayName } from "@/lib/labels"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
@@ -38,14 +39,16 @@ export default async function Page() {
                   {issue.title}
                 </span>
                 <span className="flex-1 overflow-hidden"></span>
-                {issue.labels?.nodes?.map((label) => (
-                  <span
-                    key={label.id}
-                    className="hidden rounded-full bg-slate-100/40 px-2 text-xs leading-none font-medium whitespace-nowrap transition-colors group-hover:bg-slate-100 group-hover:transition-none sm:inline-block"
-                  >
-                    {label.name}
-                  </span>
-                ))}
+                {issue.labels?.nodes
+                  ?.filter((label) => isTopicLabel(label.name))
+                  .map((label) => (
+                    <span
+                      key={label.id}
+                      className="hidden rounded-full bg-slate-100/40 px-2 text-xs leading-none font-medium whitespace-nowrap transition-colors group-hover:bg-slate-100 group-hover:transition-none sm:inline-block"
+                    >
+                      {topicDisplayName(label.name)}
+                    </span>
+                  ))}
                 <time className="text-foreground/50 group-hover:text-foreground block text-sm tracking-tighter tabular-nums transition-colors group-hover:transition-none">
                   {formatDate(issue.createdAt)}
                 </time>
