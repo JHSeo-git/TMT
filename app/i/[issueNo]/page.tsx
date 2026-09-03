@@ -29,19 +29,30 @@ interface PageProps {
   params: Promise<PageParams>
 }
 
-export async function generateMetadata({ params }: PageProps) {
-  const issueNoStr = (await params).issueNo
-  const issueNo = parseInt(issueNoStr, 10)
+/**
+ * Resolves the route's issue or renders the not-found page. An unparseable number and a number with
+ * no issue behind it are both a bad URL rather than a server fault, so this route answers 404 for
+ * either. Every other failure keeps travelling to the error boundary.
+ */
+async function loadIssue(params: PageProps["params"]) {
+  const issueNo = parseInt((await params).issueNo, 10)
 
   if (isNaN(issueNo) || issueNo < 1) {
-    throw new Error("Invalid issue number")
+    notFound()
   }
 
-  const response = await getIssueByNo(issueNo)
-
-  if (!response) {
-    return notFound()
+  try {
+    return await getIssueByNo(issueNo)
+  } catch (error) {
+    if ((error as { status?: number }).status === 404) {
+      notFound()
+    }
+    throw error
   }
+}
+
+export async function generateMetadata({ params }: PageProps) {
+  const response = await loadIssue(params)
 
   return {
     title: response.title,
@@ -49,18 +60,7 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 export default async function IssuePage({ params }: PageProps) {
-  const issueNoStr = (await params).issueNo
-  const issueNo = parseInt(issueNoStr, 10)
-
-  if (isNaN(issueNo) || issueNo < 1) {
-    throw new Error("Invalid issue number")
-  }
-
-  const response = await getIssueByNo(issueNo)
-
-  if (!response) {
-    return notFound()
-  }
+  const response = await loadIssue(params)
 
   const { body: MdxContent, toc } = await compiler.compile({
     source: response.body ?? "",
