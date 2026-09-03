@@ -1,119 +1,82 @@
 "use client"
 
-import {
-  createContext,
-  use,
-  useEffect,
-  useEffectEvent,
-  useRef,
-  type ComponentProps,
-  type RefObject,
-} from "react"
 import * as Primitive from "fumadocs-core/toc"
-import { useOnChange } from "fumadocs-core/utils/use-on-change"
 
-import { mergeRefs } from "@/lib/merge-refs"
 import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
-const TOCContext = createContext<Primitive.TOCItemType[]>([])
+/** Tick width and row indent per nesting level. The last entry covers everything deeper. */
+const TICK_WIDTH = ["w-3", "w-2.5", "w-2", "w-1.5"]
+const ROW_INDENT = ["ps-2", "ps-5", "ps-8", "ps-11"]
 
-export function useTOCItems(): Primitive.TOCItemType[] {
-  return use(TOCContext)
-}
+/**
+ * A minimap of the item's headings, pinned to the middle of the left gutter. One tick per heading,
+ * a step shorter for every nesting level, and the tick for the heading in view is filled in.
+ * Clicking the rail opens the headings as a list, which stays up — including across picking a
+ * heading — until it is dismissed with Escape or a click outside.
+ */
+export function TocRail({ toc }: { toc: Primitive.TOCItemType[] }) {
+  if (toc.length === 0) return null
 
-export function TOCProvider({
-  toc,
-  children,
-  ...props
-}: ComponentProps<typeof Primitive.AnchorProvider>) {
   return (
-    <TOCContext value={toc}>
-      <Primitive.AnchorProvider toc={toc} {...props}>
-        {children}
-      </Primitive.AnchorProvider>
-    </TOCContext>
+    <Primitive.AnchorProvider toc={toc} single>
+      <Rail toc={toc} />
+    </Primitive.AnchorProvider>
   )
 }
 
-export function TOCScrollArea({ ref, className, ...props }: ComponentProps<"div">) {
-  const viewRef = useRef<HTMLDivElement>(null)
+function Rail({ toc }: { toc: Primitive.TOCItemType[] }) {
+  const active = Primitive.useActiveAnchor()
+
+  // Depth is the absolute heading level and an item body may start at any of them, so measuring
+  // from the shallowest heading present keeps the top level's tick full length either way.
+  const root = Math.min(...toc.map((item) => item.depth))
+  const level = (depth: number) => Math.min(depth - root, TICK_WIDTH.length - 1)
 
   return (
-    <div
-      ref={mergeRefs(viewRef, ref)}
-      className={cn(
-        "relative ms-px min-h-0 [scrollbar-width:none] overflow-auto mask-[linear-gradient(to_bottom,transparent,white_16px,white_calc(100%-16px),transparent)] py-3 text-sm",
-        className
-      )}
-      {...props}
-    >
-      <Primitive.ScrollProvider containerRef={viewRef}>{props.children}</Primitive.ScrollProvider>
-    </div>
+    <Popover>
+      <PopoverTrigger
+        aria-label="On this page"
+        className="hover:bg-muted focus-visible:ring-ring/50 fixed start-2 top-1/2 flex -translate-y-1/2 scale-99 flex-col items-end gap-3 rounded-md px-2 py-3 opacity-80 transition outline-none hover:scale-100 hover:opacity-100 focus-visible:ring-[3px] max-lg:hidden"
+      >
+        {toc.map((item) => (
+          <span
+            key={item.url}
+            className={cn(
+              "h-[1.5px] rounded-full transition-colors",
+              TICK_WIDTH[level(item.depth)],
+              active === item.url.slice(1)
+                ? "bg-foreground"
+                : level(item.depth) === 0
+                  ? "bg-muted-foreground"
+                  : "bg-muted-foreground/50"
+            )}
+          />
+        ))}
+      </PopoverTrigger>
+      <PopoverContent
+        side="inline-end"
+        align="center"
+        // The rail is fixed to the viewport, so an absolutely positioned panel — Base UI's default —
+        // has to have its transform rewritten on every scroll frame just to hold still, and any
+        // frame the main thread misses shows up as the panel sliding. Positioning it the same way
+        // the rail is positioned means there is nothing to recompute.
+        positionMethod="fixed"
+        className="max-h-[calc(100dvh-2.5rem)] w-60 gap-0 overflow-auto p-1"
+      >
+        {toc.map((item) => (
+          <Primitive.TOCItem
+            key={item.url}
+            href={item.url}
+            className={cn(
+              "text-muted-foreground hover:bg-muted hover:text-foreground data-[active=true]:text-foreground block rounded-sm py-1.5 pe-2 text-sm wrap-anywhere transition-colors",
+              ROW_INDENT[level(item.depth)]
+            )}
+          >
+            {item.title}
+          </Primitive.TOCItem>
+        ))}
+      </PopoverContent>
+    </Popover>
   )
-}
-
-type TocThumbType = [top: number, height: number]
-
-interface RefProps {
-  containerRef: RefObject<HTMLElement | null>
-}
-
-export function TocThumb({ containerRef, ...props }: ComponentProps<"div"> & RefProps) {
-  const thumbRef = useRef<HTMLDivElement>(null)
-  const active = Primitive.useActiveAnchors()
-  function update(info: TocThumbType): void {
-    const element = thumbRef.current
-    if (!element) return
-    element.style.setProperty("--fd-top", `${info[0]}px`)
-    element.style.setProperty("--fd-height", `${info[1]}px`)
-  }
-
-  const onPrint = useEffectEvent(() => {
-    if (containerRef.current) {
-      update(calc(containerRef.current, active))
-    }
-  })
-
-  useEffect(() => {
-    if (!containerRef.current) return
-    const container = containerRef.current
-
-    const observer = new ResizeObserver(onPrint)
-    observer.observe(container)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [containerRef])
-
-  useOnChange(active, () => {
-    if (containerRef.current) {
-      update(calc(containerRef.current, active))
-    }
-  })
-
-  return <div ref={thumbRef} data-hidden={active.length === 0} {...props} />
-}
-
-function calc(container: HTMLElement, active: string[]): TocThumbType {
-  if (active.length === 0 || container.clientHeight === 0) {
-    return [0, 0]
-  }
-
-  let upper = Number.MAX_VALUE,
-    lower = 0
-
-  for (const item of active) {
-    const element = container.querySelector<HTMLElement>(`a[href="#${item}"]`)
-    if (!element) continue
-
-    const styles = getComputedStyle(element)
-    upper = Math.min(upper, element.offsetTop + parseFloat(styles.paddingTop))
-    lower = Math.max(
-      lower,
-      element.offsetTop + element.clientHeight - parseFloat(styles.paddingBottom)
-    )
-  }
-
-  return [upper, lower - upper]
 }
