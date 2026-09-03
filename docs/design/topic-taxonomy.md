@@ -67,6 +67,8 @@ deliberately small at 6.
   and 119 carry two.
 - If nothing in the list fits and the piece has real content, **add a topic** rather than forcing
   the nearest label. A forced label makes the label mean less for every item already carrying it.
+  A topic is worth adding when several items would carry it and none of the existing ones describes
+  them; `topic/devex` came out of exactly that. `queue.ts add-topic` handles the mechanical half.
 - `secondthought/skipped` is for an item with no body to read at all — `dump` (#302), `temp`
   (#92), `ddddd` (#292). Nothing in the archive currently carries it.
 - Never touch a label without a `/` in its name. The publish gate (`published`), `secret`, and
