@@ -32,19 +32,26 @@ in advance.
 
 ## The eight categories
 
-The sizes are **estimates** from the keyword pass above. They were not verified by hand and should
-be replaced with real counts once the first full classification has run.
+Counts below are **measured**, taken after the first full pass over the archive on 2026-09-03. The
+`Est.` column keeps the pre-pass keyword estimate so the two can be compared. Note that measured
+counts include secondary labels while the estimates assumed one label per item, so the totals are
+not directly comparable — 293 items carry 407 label assignments. The ordering is what moved.
 
-| Label | Display | Est. | What it holds |
-| --- | --- | --- | --- |
-| `topic/agents` | agents | ~95 | Agent design, harnesses, loop engineering, orchestration, multi-agent, autonomy |
-| `topic/platform` | platform | ~40 | Servers, databases, Kubernetes, cloud, sandboxes and runtimes, Git, deployment |
-| `topic/work` | work | ~40 | Ways of working, teams and orgs, careers, industry movement, company cases, essays |
-| `topic/context` | context | ~30 | Context engineering, prompting, memory, retrieval and RAG, compaction |
-| `topic/frontend` | frontend | ~30 | React, Next.js, CSS, browsers, bundlers, rendering |
-| `topic/craft` | craft | ~30 | Architecture, design principles, code review and quality, testing, technical debt |
-| `topic/agent-tools` | agent tools | ~25 | Claude Code, Codex, Cursor, skills, MCP, hooks, plugins |
-| `topic/models` | models | ~25 | Model capability and choice, evaluation and benchmarks, hallucination, tokens and cost |
+| Label | Display | Est. | Actual | Share | What it holds |
+| --- | --- | --- | --- | --- | --- |
+| `topic/agents` | agents | ~95 | 105 | 35.8% | Agent design, harnesses, loop engineering, orchestration, multi-agent, autonomy |
+| `topic/work` | work | ~40 | 57 | 19.5% | Ways of working, teams and orgs, careers, industry movement, company cases, essays |
+| `topic/agent-tools` | agent tools | ~25 | 55 | 18.8% | Claude Code, Codex, Cursor, skills, MCP, hooks, plugins |
+| `topic/context` | context | ~30 | 52 | 17.7% | Context engineering, prompting, memory, retrieval and RAG, compaction |
+| `topic/platform` | platform | ~40 | 47 | 16.0% | Servers, databases, Kubernetes, cloud, sandboxes and runtimes, Git, deployment |
+| `topic/craft` | craft | ~30 | 32 | 10.9% | Architecture, design principles, code review and quality, testing, technical debt |
+| `topic/frontend` | frontend | ~30 | 30 | 10.2% | React, Next.js, CSS, browsers, bundlers, rendering |
+| `topic/models` | models | ~25 | 29 | 9.9% | Model capability and choice, evaluation and benchmarks, hallucination, tokens and cost |
+
+The keyword pass was closest on `topic/frontend` (exact) and `topic/craft` (+2), and furthest off on
+`topic/agent-tools` (+30). Tool-specific writing hides from keywords because a piece about Claude
+Code or Cursor names the tool once and then discusses loops, context, or review for the rest of its
+length — which is also why deciding these needs a reading rather than a match.
 
 Eight is the count for these reasons. Fewer, and `topic/agents` swallows half the archive so the
 label carries no information at all. More, and ghost categories under 20 items appear. The current
@@ -86,11 +93,27 @@ factory) merely take agents as their material; they are about people.
 코드 품질" (#288, code quality in the age of agents) and "코드 리뷰를 없애는 법" (#298, how to
 eliminate code review) are these.
 
-## Going forward
+## What the first full pass exposed
 
-`topic/agents` sits at 30% of the archive, so it will have to be split eventually. It is
-deliberately not split now. Once the first full classification reveals the real distribution, if a
-single category keeps exceeding 25%, introduce a sub-axis then and record it in an ADR.
+**`topic/agents` needs splitting.** At 35.8% it is past the 25% line this document set as the
+trigger. 105 items is too many to browse, and the cluster visibly contains at least three different
+things: harness and loop design, multi-agent orchestration, and case studies of working with
+agents. Splitting it needs its own ADR.
+
+**Primary and secondary labels are not distinguishable after the fact.** The rules here name one
+primary label, and `apply` takes it as the first argument — but GitHub labels are an unordered set,
+so nothing records which one it was. 118 of 293 items carry two labels with no way to tell which
+carries the weight. Either stop relying on the distinction, or persist it.
+
+**There is no home for dev-environment notes.** Four items were skipped rather than forced:
+a macOS keyboard setting (#91), a README badge generator (#75), a zsh/arch problem in VS Code
+(#68), and a YouTube transcript utility (#38). Each is a bare bookmark or a local-machine tip with
+no topical home. Four items out of 293 is small enough to leave as skips; if the pattern grows, it
+argues for a ninth topic covering tooling and developer experience.
+
+**Two items are near-duplicates.** #305 and #301 carry essentially the same body — the same
+author's software-factory piece under two titles — and #261 is the long-form version of it. They
+were labeled independently, which is why their labels differ.
 
 The **kind** axis on an item (`thought`, `curiosity`, `answer`, `leave a mark`) covers only eight
 items today and was left alone. It gets decided separately once the topic axis has settled.
