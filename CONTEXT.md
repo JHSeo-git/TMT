@@ -1,36 +1,37 @@
 # TMT
 
-"Too many thoughts". 읽고 옮기고 곱씹은 글을 모으는 개인 아카이브입니다. 글은 별도 저장소
-`JHSeo-git/TMT-items`의 이슈로 쓰이고, 이 저장소의 앱이 그것을 읽어 사이트로 발행합니다.
+"Too many thoughts". A personal archive of writing that has been read, carried over, and chewed
+on. The writing itself lives as issues in a separate repository, `JHSeo-git/TMT-items`; the app in
+this repository reads them and publishes the site.
 
 ## Language
 
-**아이템(item)**:
-`TMT-items` 저장소의 이슈 하나. 사이트에 실리는 글 한 편의 단위입니다.
-_Avoid_: 포스트, 게시글, 이슈(저장 형태를 가리킬 때만 씁니다)
+**Item**:
+One issue in the `TMT-items` repository. The unit of a single piece of writing on the site.
+_Avoid_: post, entry, issue (use "issue" only when referring to the storage form)
 
-**원문(source)**:
-아이템이 번역하거나 요약한 대상이 되는 외부 글.
-_Avoid_: 출처, 레퍼런스, 링크
+**Source**:
+The outside piece of writing that an item translates or summarizes.
+_Avoid_: origin, reference, link
 
-**발행 게이트(publish gate)**:
-아이템을 사이트에 노출할지 결정하는 단 하나의 라벨. `published`가 이 역할을 맡습니다.
-_Avoid_: 공개 플래그, 발행 상태
+**Publish gate**:
+The one label that decides whether an item appears on the site. `published` holds this role.
+_Avoid_: visibility flag, publish state
 
-**주제(topic)**:
-아이템이 무엇에 관한 글인지 나타내는 분류 축. `topic/` 접두를 가진 라벨로 표현합니다.
-_Avoid_: 카테고리, 태그, 분야
+**Topic**:
+The axis that says what an item is about. Expressed as a label carrying the `topic/` prefix.
+_Avoid_: category, tag, field
 
-**표시명(display name)**:
-`topic/` 라벨을 사이트에서 사람에게 보여줄 때 쓰는 한국어 이름. 라벨 이름과 1:1로 대응합니다.
-_Avoid_: 별칭, 레이블
+**Display name**:
+The name a `topic/` label is shown under on the site. Corresponds one-to-one with the label name.
+_Avoid_: alias, caption
 
-**작업 큐(queue)**:
-secondthought가 아직 주제를 판정하지 않은 아이템의 집합. `secondthought/needs-topic` 라벨을
-가진 아이템이 곧 큐입니다.
-_Avoid_: 대기열, 백로그, 목록
+**Queue**:
+The set of items whose topic secondthought has not decided yet. The items carrying the
+`secondthought/needs-topic` label are the queue.
+_Avoid_: backlog, waitlist, list
 
 **secondthought**:
-아이템이 등록되거나 수정되면 그 글을 다시 읽고 주제를 판정해 `topic/` 라벨을 붙이는 에이전트.
-이름에 `/`가 들어간 라벨만 붙이고 뗍니다.
-_Avoid_: 봇, 분류기, 트리아지
+The agent that re-reads an item when it is opened or edited, decides its topic, and applies a
+`topic/` label. It applies and removes only labels whose name contains a `/`.
+_Avoid_: bot, classifier, triager

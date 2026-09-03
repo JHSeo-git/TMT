@@ -1,26 +1,27 @@
-# 의도와 결정은 TMT 저장소에 파일로 기록한다
+# Intent and decisions are recorded as files in the TMT repository
 
-글(아이템)은 `TMT-items` 저장소의 이슈로 살지만, 이 프로젝트를 어떻게 만들고 왜 그렇게
-정했는지에 대한 기록은 앱이 있는 이 저장소에 모읍니다. 용어는 `CONTEXT.md`, 되돌리기 어려운
-결정은 `docs/adr/`, 되돌릴 수 있는 설계는 `docs/design/`, 눈에 보이는 변화는 `CHANGELOG.md`가
-맡습니다. 기록이 코드와 같은 커밋에 실려야 리뷰에 걸리고, 나중에 `git log`로 왜 그랬는지를
-되짚을 수 있기 때문입니다.
+The writing (items) lives as issues in the `TMT-items` repository, but the record of how this
+project is built and why it was decided that way is collected in this repository, alongside the
+app. Terminology goes in `CONTEXT.md`, decisions that are hard to reverse in `docs/adr/`,
+reversible design in `docs/design/`, and visible change in `CHANGELOG.md`. A record has to ride in
+the same commit as the code for it to reach review, and for `git log` to answer "why" later on.
 
 ## Considered Options
 
-- **아이템(이슈)으로 기록하기.** 결정을 `TMT-items` 이슈로 써서 사이트에 그대로 발행하는
-  방식입니다. 자기참조적으로 매력적이고 코멘트로 토론까지 남지만, `grep`도 `diff`도 되지 않고
-  코드 변경과 같은 리뷰 단위에 묶이지 않습니다. 아카이브 #188에 담아 둔 *file over app*
-  원칙과도 어긋납니다.
-- **단일 `DECISIONS.md`.** 시작은 가볍지만, 결정 하나를 링크로 가리킬 수 없고 수백 줄이 넘어가면
-  탐색이 무너집니다.
+- **Recording as items (issues).** Write each decision as a `TMT-items` issue and publish it
+  straight to the site. Self-referentially appealing, and comments would even preserve the
+  discussion — but it cannot be `grep`ed or `diff`ed, and it is not bound to the same review unit
+  as the code change. It also runs against the *file over app* principle kept in archive item #188.
+- **A single `DECISIONS.md`.** Light to start, but one decision cannot be linked to on its own, and
+  navigation collapses once the file passes a few hundred lines.
 
 ## Consequences
 
-기록과 워크플로가 서로 다른 저장소에 놓입니다. `secondthought`의 GitHub Actions 워크플로는
-이슈 이벤트가 발생하는 `TMT-items`에 있어야 하므로, 그 저장소에는 이 문서 묶음을 가리키는
-포인터만 두고 실제 설명은 여기서만 관리합니다. 두 곳에 같은 내용을 복사하면 반드시 어긋납니다.
+The record and the workflow end up in different repositories. secondthought's GitHub Actions
+workflow has to live in `TMT-items`, where the issue events happen, so that repository holds only a
+pointer to this set of documents and the actual explanation is maintained here alone. Copying the
+same content into both places guarantees they drift.
 
-`docs/generate/`는 에이전트가 뱉은 산출물을 담아 두던 자리이고 이미 내용이 낡았습니다
-(사이트 이름을 "Taking My Time"으로 적고 있는데, 실제 이름은 "Too many thoughts"입니다).
-자동 생성물과 의도적으로 남긴 기록은 앞으로도 같은 디렉터리에 섞지 않습니다.
+`docs/generate/` is where agent output used to be parked, and its contents are already stale — it
+records the site's name as "Taking My Time" when the actual name is "Too many thoughts". Generated
+output and deliberately kept records will not share a directory going forward.

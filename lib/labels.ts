@@ -1,58 +1,60 @@
 /**
- * 아이템 라벨의 세 이름 공간.
+ * The three label namespaces on an item.
  *
- * - 접두 없는 라벨(`published`, `draft`, `secret`)은 사람이 붙입니다.
- * - `topic/` 과 `secondthought/` 은 secondthought가 붙이고 뗍니다.
+ * - Unprefixed labels (`published`, `draft`, `secret`) are applied by a human.
+ * - `topic/` and `secondthought/` are applied and removed by secondthought.
  *
- * 주제 판정 기준은 `docs/design/topic-taxonomy.md`가 단일 출처입니다.
+ * `docs/design/topic-taxonomy.md` is the single source of truth for how a topic is decided.
  */
 
-/** 아이템을 사이트에 노출할지 결정하는 단 하나의 라벨. */
+/** The one label that decides whether an item appears on the site. */
 export const PUBLISH_GATE_LABEL = "published"
 
-/** 주제 라벨의 접두. */
+/** Prefix shared by every topic label. */
 export const TOPIC_LABEL_PREFIX = "topic/"
 
-/** secondthought가 아직 주제를 판정하지 않은 아이템에 붙는 라벨. */
+/** Marks an item whose topic secondthought has not decided yet. */
 export const QUEUE_LABEL = "secondthought/needs-topic"
 
-/** secondthought가 주제를 판정하지 않기로 한 아이템에 붙는 라벨. */
+/** Marks an item secondthought decided not to give a topic. */
 export const SKIP_LABEL = "secondthought/skipped"
 
 /**
- * 주제 라벨과 사이트 표시명.
+ * Topic labels and the name shown for each on the site.
  *
- * 이 객체가 주제 목록의 단일 출처입니다. 주제를 추가하거나 이름을 바꿀 때 여기만 고치면
- * 사이트 표시와 분류 스크립트의 유효성 검사가 함께 따라옵니다.
+ * This object is the single source of truth for which topics exist. Adding a topic or renaming one
+ * here carries both the site's display names and the classification script's validation along.
+ * Most display names match the slug; the map still earns its place by defining the topic set and
+ * by giving `agent-tools` a form that reads as prose.
  */
 const TOPIC_DISPLAY_NAMES = {
-  "topic/agents": "에이전트",
-  "topic/context": "컨텍스트",
-  "topic/models": "모델",
-  "topic/agent-tools": "도구",
-  "topic/frontend": "프론트엔드",
-  "topic/platform": "플랫폼",
-  "topic/craft": "설계와 품질",
-  "topic/work": "일과 커리어",
+  "topic/agents": "agents",
+  "topic/context": "context",
+  "topic/models": "models",
+  "topic/agent-tools": "agent tools",
+  "topic/frontend": "frontend",
+  "topic/platform": "platform",
+  "topic/craft": "craft",
+  "topic/work": "work",
 } as const
 
 export type TopicLabel = keyof typeof TOPIC_DISPLAY_NAMES
 
 export const TOPIC_LABELS = Object.keys(TOPIC_DISPLAY_NAMES) as TopicLabel[]
 
-/** `topic/` 접두를 가진 라벨인지. 정의되지 않은 주제도 참입니다. */
+/** Whether the label carries the `topic/` prefix. Undefined topics count as well. */
 export function isTopicLabel(name: string | undefined): name is string {
   return typeof name === "string" && name.startsWith(TOPIC_LABEL_PREFIX)
 }
 
-/** 위 목록에 정의된 주제인지. 라벨을 붙이기 전 검사에 씁니다. */
+/** Whether the label is one of the topics defined above. Used to validate before applying. */
 export function isKnownTopic(name: string): name is TopicLabel {
   return name in TOPIC_DISPLAY_NAMES
 }
 
 /**
- * 표시명이 등록되지 않은 주제 라벨은 접두만 떼어 그대로 보여줍니다.
- * 라벨을 새로 만들었는데 표시명 추가를 잊어도 목록이 비지 않도록 하기 위한 것입니다.
+ * A topic label with no registered display name falls back to its slug with the prefix stripped,
+ * so that forgetting to add a display name for a new label never blanks out the list.
  */
 export function topicDisplayName(name: string): string {
   return (

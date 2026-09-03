@@ -37,9 +37,9 @@ interface LabelNode {
 }
 
 /**
- * 이슈의 라벨을 렌더링 가능한 형태로 정규화합니다.
- * GitHub 응답의 라벨은 문자열이거나 이름이 없을 수 있는데, 이름 없는 라벨은
- * 화면에 그릴 수도 분류에 쓸 수도 없으므로 여기서 걸러 냅니다.
+ * Normalizes an issue's labels into a shape the UI can render.
+ * A label in GitHub's response may be a bare string or carry no name at all, and a nameless label
+ * can neither be drawn nor classified, so it is filtered out here.
  */
 function toLabelNodes(labels: RestIssueLabels): LabelNode[] {
   return labels.flatMap((label) => {

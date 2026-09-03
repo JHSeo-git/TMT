@@ -74,5 +74,5 @@ picked back up at any point, so there is no reason to hurry.
 | --- | --- |
 | Re-applying a topic label that is already there | Re-applying a label has thrown GitHub's label filter index out of sync before (ADR 0002, issue #109). Change only what needs changing. |
 | Counting the queue with `gh issue list --label` | When that index is stale, items go missing silently. `queue.ts` fetches every issue and filters locally. |
-| Calling a topic a "category" | `CONTEXT.md` fixes the term for this axis as 주제 (topic) and puts 카테고리 (category) under `_Avoid_`. |
+| Calling a topic a "category" | `CONTEXT.md` fixes the term for this axis as *topic* and puts *category* under `_Avoid_`. |
 | Filling all three labels because the call is unclear | Secondary labels are for certainty. When it is unclear, leave the primary label on its own. |
