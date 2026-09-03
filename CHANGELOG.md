@@ -4,6 +4,12 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-09-03 - Class names merge through `cn`
+
+- `lib/utils.ts` now re-exports `cn` from the package of that name instead of composing `clsx` and `tailwind-merge` itself, and those two packages are dropped. `cn` is shadcn's own compiled drop-in for the pair, published 2026-09-02 from `shadcn-ui/cn` — worth noting because `cn` is a generic enough name on npm to deserve a second look, and because the package ships a `bin` (a CLI for compiling its class tables) which reads oddly for a class-name helper.
+- Conflict resolution is the part of that pair this codebase actually leans on, so the swap was checked against the behaviour it replaced rather than taken on the strength of "drop-in". The toc panel overrides the popover's own `w-72`, `p-4`, and `gap-4`, and a tick's colour depends on `bg-foreground` beating `bg-muted-foreground`; every override resolves identically, including arbitrary values such as `max-h-[calc(100dvh-2.5rem)]` and pairs that must _not_ collapse, such as `text-muted-foreground` alongside `data-[active=true]:text-foreground`. Class merging happens at runtime, so a build cannot catch a regression here: confirmed in the rendered page as well, where the panel still computes to 240px wide with 4px of padding and a 0px row gap, and the ticks still measure 12px and 10px with exactly one filled in.
+- `format:check` caught the one real problem, a semicolon on the new export line against this repo's `semi: false`. Fixed in place.
+
 ## 2026-09-03 - The item's headings become a rail in the left gutter
 
 - Replaced the item page's table of contents. The 286px "On this Page" panel in the right gutter and the `Index` back-link in the left gutter are both gone, and in their place a rail of ticks sits pinned to the middle of the left gutter — one tick per heading, a step shorter for every nesting level, with the tick for the heading in view filled in. Clicking the rail opens the headings as a 240px list. The shape follows [Substack's article TOC](https://addyo.substack.com/p/agentic-skill-decay) closely: 12px ticks 1.5px tall, 2px shorter per level, 12px apart, `left: 8px`, vertically centred.
