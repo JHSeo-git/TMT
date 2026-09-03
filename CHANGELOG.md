@@ -4,6 +4,14 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-09-03 - The list moves to `/`
+
+- Removed the redirects in `next.config.ts`: `/` no longer bounces to `/p`, and `/i` no longer bounces to `/i/1`. The list is served at `/` directly, and `/i` now 404s rather than landing on an arbitrary item.
+- Moved `app/p/page.tsx` to `app/page.tsx`. The old root page was unreachable — the permanent redirect intercepted `/` before routing — and it held nothing but a link to `/p`. Every internal link in the app already pointed at `/` as home (`app/i/[issueNo]/error.tsx` and both `not-found.tsx` files), so those links now resolve directly instead of through a redirect hop.
+- Moved `app/p/not-found.tsx` to `app/not-found.tsx`, which promotes it from a `/p`-segment boundary to the app's global 404. It now covers `/i` and any other unmatched path, where Next's default page used to show.
+- Verified against a running build: `/` returns 200 with all 100 list links, and `/p` and `/i` return 404 rendering the app's own not-found page.
+- One consequence to be aware of: the removed `/` → `/p` redirect was `permanent: true`, which browsers cache as a 308 with no expiry. A returning visitor may still be sent from `/` to `/p` by their own cache and land on a 404 until they clear it. Nothing in the app can undo a cached 308 — the options are to live with it or to serve `/p` again temporarily.
+
 ## 2026-09-03 - The `published` gate and secondthought's work queue
 
 - Renamed the publish gate from `learn` to `published`. GitHub's label rename was used rather than creating a new label and re-applying it, so the label stayed attached to all 293 items. `learn` ("Today I learned") had nothing to do with whether something was published, and `published` sits in exact opposition to the existing `draft` (ADR 0002).
