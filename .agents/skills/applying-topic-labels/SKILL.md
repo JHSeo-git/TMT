@@ -12,8 +12,8 @@ name — the skill is the work, `secondthought` is what will do the work automat
 
 **`docs/design/topic-taxonomy.md` is the single source of truth for how to decide. Read it before
 applying a single label.** It holds the eight category definitions, the priority order for
-conflicts, and boundary cases pinned to real issue numbers. That document is written in Korean.
-Do not copy any of it into this file — two copies always drift.
+conflicts, and boundary cases pinned to real issue numbers. Do not copy any of it into this file —
+two copies always drift.
 
 ## Label boundaries
 

@@ -45,3 +45,6 @@ next-env.d.ts
 
 # claude trace
 .claude-trace
+
+# local drafts staged before they become items
+.my
