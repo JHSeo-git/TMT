@@ -24,7 +24,12 @@ description: "Use when TMT 아카이브 아이템에 주제 라벨이 필요할 
 
 ## 명령
 
-`.agents/skills/applying-topic-labels/scripts/queue.sh`
+저장소 루트에서 실행합니다. bun이 `.env`의 `GITHUB_TOKEN`/`GITHUB_OWNER`/`GITHUB_REPO`를
+자동으로 읽습니다.
+
+```
+bun run .agents/skills/applying-topic-labels/scripts/queue.ts <명령>
+```
 
 | 명령 | 하는 일 |
 | --- | --- |
@@ -37,6 +42,9 @@ description: "Use when TMT 아카이브 아이템에 주제 라벨이 필요할 
 
 정의되지 않은 주제 이름과 라벨 4개 이상은 스크립트가 거부합니다. 그 두 가지는 판단이 아니라
 기계적 제약이므로 외우지 않아도 됩니다.
+
+주제 목록 자체는 `lib/labels.ts`가 단일 출처입니다. 주제를 추가하거나 이름을 바꿀 때 거기만
+고치면 사이트 표시명과 이 스크립트의 유효성 검사가 함께 따라옵니다.
 
 ## 판정
 
@@ -60,6 +68,6 @@ description: "Use when TMT 아카이브 아이템에 주제 라벨이 필요할 
 | 실수 | 왜 문제인가 |
 | --- | --- |
 | 이미 붙은 주제 라벨을 다시 붙이기 | 라벨 재부착은 GitHub의 라벨 필터 색인을 어긋나게 만든 이력이 있습니다(ADR 0002의 #109). 바꿀 것만 바꾸세요. |
-| `gh issue list --label`로 큐를 세기 | 그 색인이 낡으면 아이템이 조용히 누락됩니다. `queue.sh`는 전수를 받아 직접 거릅니다. |
+| `gh issue list --label`로 큐를 세기 | 그 색인이 낡으면 아이템이 조용히 누락됩니다. `queue.ts`는 전수를 받아 직접 거릅니다. |
 | 주제를 "카테고리"라고 부르기 | `CONTEXT.md`가 이 축의 용어를 "주제"로 정하고 "카테고리"를 `_Avoid_`에 두었습니다. |
 | 애매해서 라벨 3개를 다 채우기 | 보조 라벨은 확실할 때만. 애매하면 주 라벨 하나로 두세요. |
