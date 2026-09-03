@@ -4,6 +4,16 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-09-03 - shadcn components move from Radix to Base UI
+
+- Switched the shadcn component base from Radix to Base UI. The base is not a field of its own: it is chosen through `style` in `components.json`, whose enum now reads `radix-*`, `base-*`, and `aria-*` (React Aria) crossed with eight visual styles — `vega`, `nova`, `maia`, `lyra`, `mira`, `luma`, `sera`, `rhea`. This repo sat on the legacy `new-york` and now uses `base-vega`, whose button base classes (`rounded-md`, `focus-visible:border-ring`, `ring-3` at `ring-ring/50`, `text-sm`) are the ones the installed button already carried, so it is the smallest visual step of the eight.
+- Replaced the five Radix packages and `cmdk` with `@base-ui/react@1.7.0`. Note that the published name is `@base-ui/react`; `@base-ui-components/react` is the older name and stopped at `1.0.0-rc.0`.
+- Deleted `dialog`, `command`, `input`, `pagination`, and `scroll-area` from `components/ui/` instead of migrating them. Nothing in the app imported any of the five — they were vendored during setup and never used — and `@radix-ui/react-dialog`, `@radix-ui/react-scroll-area`, and `cmdk` sat in `package.json` only to serve them. What remains is `button` and a `popover` re-added from the new registry, which is the whole of the surface actually in use.
+- `Button`'s `asChild` prop is gone, since Base UI composes through `render` rather than a `Slot`. Nothing broke: every caller here reaches for `buttonVariants()` and puts the classes on its own `Link` or `a`, and the one real `<Button>` passes only `onClick` and `variant`.
+- One deliberate visual change comes along with it. The `destructive` variant is `bg-destructive/10 text-destructive` in the new design language rather than the solid `bg-destructive text-white`, so the "Try again" button on the item error boundary is now a tinted red rather than a filled one. All eight styles share that treatment, so it is not something the choice of `base-vega` could avoid.
+- `app/globals.css` was left untouched by the CLI, verified by diff. Every variable the two components reach for — `--primary`, `--secondary`, `--muted`, `--border`, `--input`, `--ring`, `--destructive`, `--popover`, and `--radius-md` — was already defined there.
+- The dependency count fell rather than rose: six packages out, one in. Verified with a production build of 105 pages and no type or lint errors.
+
 ## 2026-09-03 - The list moves to `/`
 
 - Removed the redirects in `next.config.ts`: `/` no longer bounces to `/p`, and `/i` no longer bounces to `/i/1`. The list is served at `/` directly, and `/i` now 404s rather than landing on an arbitrary item.
