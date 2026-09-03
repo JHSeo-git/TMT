@@ -1,12 +1,14 @@
 ---
-name: secondthought
+name: applying-topic-labels
 description: "Use when TMT 아카이브 아이템에 주제 라벨이 필요할 때 — secondthought/needs-topic 큐를 비우거나, 특정 이슈의 주제를 판정하거나, TMT-items 전체에 topic 라벨을 백필할 때."
 ---
 
-# secondthought
+# 주제 라벨 붙이기
 
-`JHSeo-git/TMT-items`의 아이템을 읽고 주제를 판정해 `topic/` 라벨을 붙입니다. 나중에 GitHub
-Action으로 옮길 작업을 지금은 로컬에서 손으로 돌리는 형태입니다.
+`JHSeo-git/TMT-items`의 아이템을 읽고 주제를 판정해 `topic/` 라벨을 붙입니다. 이 일은 앞으로
+`secondthought` 에이전트가 GitHub Action에서 맡을 예정이고, 지금은 같은 작업을 로컬에서 손으로
+돌리는 형태입니다. 그래서 라벨 이름에는 에이전트 이름이 들어가지만 스킬 이름에는 들어가지
+않습니다 — 스킬은 작업이고 `secondthought`는 그 작업을 자동으로 하게 될 주체입니다.
 
 **판정 기준은 `docs/design/topic-taxonomy.md`가 단일 출처입니다. 라벨을 하나라도 붙이기 전에
 그 문서를 읽으세요.** 8개 카테고리의 정의, 충돌 시 우선순위, 실제 이슈 번호가 붙은 경계 사례가
@@ -19,7 +21,7 @@ Action으로 옮길 작업을 지금은 로컬에서 손으로 돌리는 형태�
 
 ## 명령
 
-`.agents/skills/secondthought/scripts/queue.sh`
+`.agents/skills/applying-topic-labels/scripts/queue.sh`
 
 | 명령 | 하는 일 |
 | --- | --- |
