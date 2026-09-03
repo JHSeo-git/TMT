@@ -8,7 +8,7 @@ by who owns them.
 | Namespace | Owner | Labels |
 | --- | --- | --- |
 | unprefixed | human | `published`, `draft`, `secret`, plus the kind labels |
-| `topic/` | secondthought | eight of them, `topic/agents` and so on |
+| `topic/` | secondthought | one per subject, `topic/agents` and so on |
 | `secondthought/` | secondthought | `secondthought/needs-topic`, `secondthought/skipped` |
 
 One rule defines the boundary: **a label whose name contains a `/` belongs to the machine, one

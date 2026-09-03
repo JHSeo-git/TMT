@@ -36,6 +36,7 @@ const TOPIC_DISPLAY_NAMES = {
   "topic/platform": "platform",
   "topic/craft": "craft",
   "topic/work": "work",
+  "topic/devex": "devex",
 } as const
 
 export type TopicLabel = keyof typeof TOPIC_DISPLAY_NAMES

@@ -11,7 +11,7 @@ locally by hand. That is why the agent's name appears in the label namespace but
 name — the skill is the work, `secondthought` is what will do the work automatically.
 
 **`docs/design/topic-taxonomy.md` is the single source of truth for how to decide. Read it before
-applying a single label.** It holds the eight category definitions, the priority order for
+applying a single label.** It holds the nine category definitions, the priority order for
 conflicts, and boundary cases pinned to real issue numbers. Do not copy any of it into this file —
 two copies always drift.
 
@@ -40,7 +40,9 @@ bun run .agents/skills/applying-topic-labels/scripts/queue.ts <command>
 | `list` | Number and title of every queued item |
 | `show <number> [chars]` | Body text for deciding (4000 characters by default) |
 | `apply <number> <topic...>` | Add topic labels, then drop the item from the queue |
+| `retag <number> <topic...>` | Replace an item's topic labels, to correct an earlier decision |
 | `skip <number>` | Mark as undecidable, then drop the item from the queue |
+| `add-topic <slug> <display> <color> <description>` | Define a new topic in `lib/labels.ts` and on GitHub |
 
 The script rejects unknown topic names and more than three labels. Both are mechanical constraints
 rather than judgment calls, so there is nothing to memorize.
@@ -50,17 +52,32 @@ topic there carries the site's display names and this script's validation along 
 
 ## Deciding
 
-Give each item exactly one **primary label**, plus up to two secondary labels when they are
-certain. Pick the primary by asking what the piece is ultimately about. The first argument is the
-primary label.
+Start by asking what the piece is ultimately about, and give it that label. Add up to two more when
+they are equally true of the piece. **The labels carry equal weight** — GitHub stores them as an
+unordered set, so nothing distinguishes the one you picked first. Asking "what is this mainly
+about" is a way to think, not a slot to fill: it keeps you from labeling by loose association.
 
 Never decide from the title alone. Most items here are translations or summaries of outside
 writing, and the words in a title often pull away from the actual argument. #320
 "2026년의 AI 에이전트 샌드박싱" (AI agent sandboxing in 2026) carries "agent" in its title but is a
 runtime comparison. Use `show` to read the opening and the source URL before deciding.
 
-When an item is a personal record outside the topic axis, or its body is empty, `skip` it rather
-than forcing a label onto it. Left in the queue, it keeps the queue from ever emptying.
+**If the opening does not settle it, read further.** `show` takes a character count — go to 1500 or
+3000 and read the part where the piece states its actual argument. An item labeled from a guess
+costs more than the minute it takes to read on. Two examples from the first full pass: #14
+looked like a Java language explainer until the middle turned out to be about when to choose each
+kind of exception, and #188 looked like a note-taking essay until the body turned out to be a tool
+setup. Both moved once they were read properly.
+
+**If nothing in the topic list fits, add a topic** with `add-topic` rather than forcing the nearest
+label. That is a real action available here, not a request to file. A topic is worth adding when
+several items would carry it and none of the existing ones describes them — `topic/devex` came
+out of exactly that, from four items about local machine setup and small utilities that had been
+skipped for want of a home. After adding one, record it in `docs/design/topic-taxonomy.md`; the
+script only handles the mechanical half.
+
+`skip` is for an item with no body to read at all. Anything with content gets a label, whether an
+existing one or a new one.
 
 ## Working through the queue
 
@@ -75,4 +92,5 @@ picked back up at any point, so there is no reason to hurry.
 | Re-applying a topic label that is already there | Re-applying a label has thrown GitHub's label filter index out of sync before (ADR 0002, issue #109). Change only what needs changing. |
 | Counting the queue with `gh issue list --label` | When that index is stale, items go missing silently. `queue.ts` fetches every issue and filters locally. |
 | Calling a topic a "category" | `CONTEXT.md` fixes the term for this axis as *topic* and puts *category* under `_Avoid_`. |
-| Filling all three labels because the call is unclear | Secondary labels are for certainty. When it is unclear, leave the primary label on its own. |
+| Filling all three labels because the call is unclear | Extra labels are for what is equally true of the piece. When the call is unclear, read further instead of padding. |
+| Forcing the nearest label when none fits | `add-topic` exists. A forced label is worse than a new topic, because it makes the label mean less for every item already carrying it. |

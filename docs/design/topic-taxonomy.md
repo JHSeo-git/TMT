@@ -1,6 +1,6 @@
 # Topic taxonomy
 
-Defines the `topic/` labels secondthought applies to an item. There are eight.
+Defines the `topic/` labels secondthought applies to an item. There are nine.
 
 ## What is actually being classified
 
@@ -22,7 +22,7 @@ only 37 of 319 items land in exactly one bucket, while 194 land in three or more
 "에이전트형 코딩 평가에서 인프라 노이즈를 정량적으로 측정하기" (#202, quantifying
 infrastructure noise in agentic coding evaluations) belongs to agents, evaluation, and
 infrastructure at once. A mutually exclusive single classification turns arbitrary however it is
-cut, so the design assumes **one primary label with secondary labels allowed**.
+cut, so the design allows **more than one label per item, all of equal weight**.
 
 **The largest mass does not split on keywords.** Splitting the 95 items under `topic/agents` into
 harness, multi-agent, and practice collapsed: "AI 도입은 허상이다" (AI adoption is an illusion)
@@ -30,12 +30,12 @@ went to multi-agent and "JUST USE REACT" went to orchestration. Deciding this re
 understanding meaning, which is why secondthought exists. It is also why no sub-categories are cut
 in advance.
 
-## The eight categories
+## The nine categories
 
 Counts below are **measured**, taken after the first full pass over the archive on 2026-09-03. The
 `Est.` column keeps the pre-pass keyword estimate so the two can be compared. Note that measured
-counts include secondary labels while the estimates assumed one label per item, so the totals are
-not directly comparable — 293 items carry 407 label assignments. The ordering is what moved.
+counts include an item's every label while the estimates assumed one per item, so the totals are
+not directly comparable — 293 items carry 412 label assignments. The ordering is what moved.
 
 | Label | Display | Est. | Actual | Share | What it holds |
 | --- | --- | --- | --- | --- | --- |
@@ -43,10 +43,11 @@ not directly comparable — 293 items carry 407 label assignments. The ordering 
 | `topic/work` | work | ~40 | 57 | 19.5% | Ways of working, teams and orgs, careers, industry movement, company cases, essays |
 | `topic/agent-tools` | agent tools | ~25 | 55 | 18.8% | Claude Code, Codex, Cursor, skills, MCP, hooks, plugins |
 | `topic/context` | context | ~30 | 52 | 17.7% | Context engineering, prompting, memory, retrieval and RAG, compaction |
-| `topic/platform` | platform | ~40 | 47 | 16.0% | Servers, databases, Kubernetes, cloud, sandboxes and runtimes, Git, deployment |
-| `topic/craft` | craft | ~30 | 32 | 10.9% | Architecture, design principles, code review and quality, testing, technical debt |
+| `topic/platform` | platform | ~40 | 45 | 15.4% | Servers, databases, Kubernetes, cloud, sandboxes and runtimes, Git, deployment |
+| `topic/craft` | craft | ~30 | 33 | 11.3% | Architecture, design principles, code review and quality, testing, technical debt |
 | `topic/frontend` | frontend | ~30 | 30 | 10.2% | React, Next.js, CSS, browsers, bundlers, rendering |
 | `topic/models` | models | ~25 | 29 | 9.9% | Model capability and choice, evaluation and benchmarks, hallucination, tokens and cost |
+| `topic/devex` | devex | — | 6 | 2.0% | Local dev environment, editors, shells, small utilities |
 
 The keyword pass was closest on `topic/frontend` (exact) and `topic/craft` (+2), and furthest off on
 `topic/agent-tools` (+30). Tool-specific writing hides from keywords because a piece about Claude
@@ -55,16 +56,19 @@ length — which is also why deciding these needs a reading rather than a match.
 
 Eight is the count for these reasons. Fewer, and `topic/agents` swallows half the archive so the
 label carries no information at all. More, and ghost categories under 20 items appear. The current
-set runs from 25 to 95 items, so all eight are alive.
+set runs from 29 to 105 items for the eight that carry the archive, with `topic/devex` sitting
+deliberately small at 6.
 
 ## Rules for applying
 
-- There is exactly one primary label. Decide it by asking what the piece is ultimately about.
-- Up to two secondary labels are allowed. None is fine.
-- If nothing fits, **apply no label.** Inventing a label that means "unclassified" would make it a
-  second `published`. This covers items with no content — `dump` (#302), `temp` (#92), `ddddd`
-  (#292) — and personal records outside the topic axis such as a travel note (#270). Apply
-  `secondthought/skipped` instead to take them out of the queue.
+- Give the item the label for what it is ultimately about, then up to two more that are equally
+  true of it. **All of an item's labels carry equal weight** — GitHub stores them as an unordered
+  set, so there is no primary among them. One label is the common case; 174 of 293 items carry one
+  and 119 carry two.
+- If nothing in the list fits and the piece has real content, **add a topic** rather than forcing
+  the nearest label. A forced label makes the label mean less for every item already carrying it.
+- `secondthought/skipped` is for an item with no body to read at all — `dump` (#302), `temp`
+  (#92), `ddddd` (#292). Nothing in the archive currently carries it.
 - Never touch a label without a `/` in its name. The publish gate (`published`), `secret`, and
   `draft` belong to a human.
 
@@ -100,20 +104,29 @@ trigger. 105 items is too many to browse, and the cluster visibly contains at le
 things: harness and loop design, multi-agent orchestration, and case studies of working with
 agents. Splitting it needs its own ADR.
 
-**Primary and secondary labels are not distinguishable after the fact.** The rules here name one
-primary label, and `apply` takes it as the first argument — but GitHub labels are an unordered set,
-so nothing records which one it was. 118 of 293 items carry two labels with no way to tell which
-carries the weight. Either stop relying on the distinction, or persist it.
+**Labels are equal-weight, and that is now deliberate.** The first pass followed a
+primary-plus-secondary rule, then found that nothing records which label was primary, because
+GitHub labels are an unordered set. Rather than build a device to persist the distinction, the rule
+was dropped: an item's labels all carry the same weight. Asking "what is this mainly about" stays
+in the skill as a way to think, since it stops labeling by loose association, but it no longer
+implies a slot.
 
-**There is no home for dev-environment notes.** Four items were skipped rather than forced:
-a macOS keyboard setting (#91), a README badge generator (#75), a zsh/arch problem in VS Code
-(#68), and a YouTube transcript utility (#38). Each is a bare bookmark or a local-machine tip with
-no topical home. Four items out of 293 is small enough to leave as skips; if the pattern grows, it
-argues for a ninth topic covering tooling and developer experience.
+**`topic/devex` was added, and the skips went away with it.** Four items had been skipped for want
+of a home: a macOS keyboard setting (#91), a README badge generator (#75), a zsh/arch problem in
+VS Code (#68), and a YouTube transcript utility (#38). A `uv` task runner (#117) had been forced
+into `topic/platform` for the same reason. All five now sit under `topic/devex`, along with #188
+(an Obsidian setup). At 6 items it is the smallest topic by a wide margin, which is expected — it
+exists to stop small tooling notes from distorting the topics that carry real weight.
 
-**Two items are near-duplicates.** #305 and #301 carry essentially the same body — the same
-author's software-factory piece under two titles — and #261 is the long-form version of it. They
-were labeled independently, which is why their labels differ.
+Adding a topic is now a documented action in the skill rather than a request to file, and
+`queue.ts add-topic` handles the mechanical half: writing the entry into `lib/labels.ts` and
+creating the label on GitHub. Recording it here stays a judgment call.
+
+**Three items are near-duplicates, and they stay that way.** #305 and #301 carry essentially the
+same body — the same author's software-factory piece under two titles — and #261 is the long-form
+version. They were labeled independently, so their labels differ. Left as is deliberately: they
+are three separate items in the archive, and collapsing them is a content decision, not a
+labeling one.
 
 The **kind** axis on an item (`thought`, `curiosity`, `answer`, `leave a mark`) covers only eight
 items today and was left alone. It gets decided separately once the topic axis has settled.

@@ -7,6 +7,7 @@
  *
  * Run from the repository root; bun reads `.env` automatically.
  */
+import { readFile, writeFile } from "node:fs/promises"
 import { Octokit } from "octokit"
 
 import {
@@ -15,6 +16,7 @@ import {
   PUBLISH_GATE_LABEL,
   QUEUE_LABEL,
   SKIP_LABEL,
+  TOPIC_LABEL_PREFIX,
   TOPIC_LABELS,
 } from "@/lib/labels"
 
@@ -199,7 +201,76 @@ async function cmdApply(issueArg: string | undefined, topics: string[]) {
 
   await addLabels(issue, topics)
   await removeLabel(issue, QUEUE_LABEL)
+  // An item cannot be both classified and skipped, so applying a topic clears the skip.
+  await removeLabel(issue, SKIP_LABEL)
   console.log(`#${issue} <- ${topics.join(" ")}`)
+}
+
+/**
+ * Replaces an item's topic labels with the given set. Use this to correct a decision: `apply` only
+ * adds, so a label applied by mistake would otherwise stay on the item forever.
+ */
+async function cmdRetag(issueArg: string | undefined, topics: string[]) {
+  const issue = parseIssueNumber(issueArg)
+  if (topics.length < 1) fail("name at least one topic label")
+  if (topics.length > 3) fail(`at most three labels (got ${topics.length})`)
+  for (const topic of topics) {
+    if (!isKnownTopic(topic)) {
+      fail(`'${topic}' is not a defined topic. Available: ${TOPIC_LABELS.join(" ")}`)
+    }
+  }
+
+  const { data } = await octokit.rest.issues.get({ owner, repo, issue_number: issue })
+  const current = data.labels
+    .map((label) => (typeof label === "string" ? label : label.name))
+    .filter((name): name is string => isTopicLabel(name))
+
+  const removed = current.filter((name) => !topics.includes(name))
+  const added = topics.filter((name) => !current.includes(name))
+
+  if (added.length > 0) await addLabels(issue, added)
+  for (const name of removed) await removeLabel(issue, name)
+  await removeLabel(issue, QUEUE_LABEL)
+  await removeLabel(issue, SKIP_LABEL)
+
+  const summary = [
+    added.length > 0 ? `+${added.join(" +")}` : null,
+    removed.length > 0 ? `-${removed.join(" -")}` : null,
+  ].filter(Boolean)
+  console.log(`#${issue} ${summary.length > 0 ? summary.join(" ") : "(no change)"}`)
+}
+
+/**
+ * Defines a new topic: writes it into `lib/labels.ts`, which is the single source of truth for the
+ * topic set, and creates the label on GitHub. Recording it in the taxonomy document is still a
+ * judgment call and stays manual.
+ */
+async function cmdAddTopic(
+  slugArg: string | undefined,
+  display: string | undefined,
+  color: string | undefined,
+  description: string | undefined
+) {
+  if (!slugArg || !display || !color || !description) {
+    fail("usage: add-topic <slug> <display> <color> <description>")
+  }
+  const label = slugArg.startsWith(TOPIC_LABEL_PREFIX) ? slugArg : TOPIC_LABEL_PREFIX + slugArg
+  if (!/^topic\/[a-z0-9-]+$/.test(label)) fail(`'${label}' is not a valid topic label name`)
+  if (!/^[0-9A-Fa-f]{6}$/.test(color)) fail(`'${color}' is not a six-digit hex color`)
+  if (isKnownTopic(label)) fail(`'${label}' is already defined`)
+
+  const path = "lib/labels.ts"
+  const source = await readFile(path, "utf8")
+  const anchor = "\n} as const"
+  const at = source.indexOf(anchor)
+  if (at < 0) fail(`could not find the topic map in ${path}; add the entry by hand`)
+  const entry = `\n  "${label}": "${display}",`
+  await writeFile(path, source.slice(0, at) + entry + source.slice(at))
+  console.log(`${path} <- "${label}": "${display}"`)
+
+  await octokit.rest.issues.createLabel({ owner, repo, name: label, color, description })
+  console.log(`${owner}/${repo} <- label ${label} (#${color})`)
+  console.log("Remember to record the new topic in docs/design/topic-taxonomy.md.")
 }
 
 async function cmdSkip(issueArg: string | undefined) {
@@ -223,7 +294,10 @@ function usage() {
   list                       Number and title of every queued item
   show <number> [chars]      Body text for deciding (4000 characters by default)
   apply <number> <topic...>  Add topic labels, then drop from the queue
+  retag <number> <topic...>  Replace an item's topic labels (use to correct a decision)
   skip <number>              Mark as undecidable, then drop from the queue
+  add-topic <slug> <display> <color> <description>
+                             Define a new topic in lib/labels.ts and on GitHub
 
 The target repository comes from GITHUB_OWNER and GITHUB_REPO in .env.`)
 }
@@ -245,6 +319,12 @@ switch (command) {
     break
   case "apply":
     await cmdApply(args[0], args.slice(1))
+    break
+  case "retag":
+    await cmdRetag(args[0], args.slice(1))
+    break
+  case "add-topic":
+    await cmdAddTopic(args[0], args[1], args[2], args.slice(3).join(" "))
     break
   case "skip":
     await cmdSkip(args[0])
