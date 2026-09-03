@@ -36,9 +36,12 @@ exact opposition to the existing `draft`.
 
 ## Consequences
 
-The app now needs a display-name mapping. `app/p/page.tsx` draws label names directly as chips, so
-left alone the list would expose the string `topic/agents`. `lib/labels.ts` takes on selecting only
-`topic/` labels and mapping them to short display names, and state labels are not drawn at all.
+The app needed a display-name mapping. `app/p/page.tsx` drew label names directly as chips, so left
+alone the list would have exposed the string `topic/agents`; `lib/labels.ts` took on selecting only
+`topic/` labels and mapping them to short display names. The chips were dropped from the list page
+soon after, so the site now renders no label at all and that mapping is dormant. It is kept because
+the topic set is derived from it, and because the display names are the intended presentation if
+labels return to the UI.
 
 Introducing a queue label gave labels a lifecycle. `secondthought/needs-topic` must come off once
 applied, and secondthought is the only thing that takes it off. Leaving an undecidable item in the

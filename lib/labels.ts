@@ -20,12 +20,15 @@ export const QUEUE_LABEL = "secondthought/needs-topic"
 export const SKIP_LABEL = "secondthought/skipped"
 
 /**
- * Topic labels and the name shown for each on the site.
+ * Topic labels and the name each would be shown under.
  *
- * This object is the single source of truth for which topics exist. Adding a topic or renaming one
- * here carries both the site's display names and the classification script's validation along.
- * Most display names match the slug; the map still earns its place by defining the topic set and
- * by giving `agent-tools` a form that reads as prose.
+ * This object is the single source of truth for which topics exist: its keys drive `TOPIC_LABELS`,
+ * the `TopicLabel` type, and `isKnownTopic`, so adding a topic here carries the classification
+ * script's validation along with it.
+ *
+ * The values are kept but nothing reads them right now — the list page dropped its label chips, so
+ * the site renders no label at all. They are the intended presentation if labels return to the UI,
+ * which is why `agent-tools` carries a form that reads as prose rather than its slug.
  */
 const TOPIC_DISPLAY_NAMES = {
   "topic/agents": "agents",
@@ -51,14 +54,4 @@ export function isTopicLabel(name: string | undefined): name is string {
 /** Whether the label is one of the topics defined above. Used to validate before applying. */
 export function isKnownTopic(name: string): name is TopicLabel {
   return name in TOPIC_DISPLAY_NAMES
-}
-
-/**
- * A topic label with no registered display name falls back to its slug with the prefix stripped,
- * so that forgetting to add a display name for a new label never blanks out the list.
- */
-export function topicDisplayName(name: string): string {
-  return (
-    (TOPIC_DISPLAY_NAMES as Record<string, string>)[name] ?? name.slice(TOPIC_LABEL_PREFIX.length)
-  )
 }

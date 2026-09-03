@@ -23,7 +23,8 @@ The axis that says what an item is about. Expressed as a label carrying the `top
 _Avoid_: category, tag, field
 
 **Display name**:
-The name a `topic/` label is shown under on the site. Corresponds one-to-one with the label name.
+The name a `topic/` label is shown under when it is presented to a person. Corresponds one-to-one
+with the label name.
 _Avoid_: alias, caption
 
 **Queue**:
