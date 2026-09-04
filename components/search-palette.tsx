@@ -21,26 +21,37 @@ export interface PaletteItem {
   createdAt: string
 }
 
-/** Marks a body result's value so the filter can wave it through. */
-const SECTION_VALUE_PREFIX = "section::"
+/**
+ * A single body result. fumadocs keeps `SortedResult` out of its public subpaths, so the type is
+ * read back off the hook rather than imported.
+ */
+type BodyRow = Extract<ReturnType<typeof useDocsSearch>["query"]["data"], unknown[]>[number]
 
 /** How many items to show before anything has been typed. All 293 is a wall, not a list. */
 const IDLE_ITEM_COUNT = 10
 
+/**
+ * How many rows each group renders at most.
+ *
+ * These are not cosmetic. The route answers with every match it has — 1,129 body results for
+ * `에이전트` — and `cmdk` re-runs its filter across every mounted row on each keystroke, so
+ * rendering them all cost 185.7ms per keypress with about 6,800 nodes in the list. Body rows carry
+ * highlight elements and are the expensive ones; titles are a single line each, so they can afford
+ * a looser cap.
+ */
+const MAX_TITLE_ROWS = 30
+const MAX_BODY_ROWS = 8
+
 export function SearchPalette({ items }: { items: PaletteItem[] }) {
   const router = useTransitionRouter()
   const [open, setOpen] = React.useState(false)
-  const [input, setInput] = React.useState("")
-  const { setSearch, query } = useDocsSearch({ type: "fetch" })
 
-  // Titles answer every keystroke locally, so only the round trip is debounced.
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      React.startTransition(() => setSearch(input))
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [input, setSearch])
+  /**
+   * `search` updates on the keystroke and `delayMs` debounces only the round trip behind it, so
+   * titles filter immediately while the body request waits. This is the hook's own debounce; an
+   * effect and a second piece of state on top of it would just add another 300ms.
+   */
+  const { search, setSearch, query } = useDocsSearch({ type: "fetch", delayMs: 200 })
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -71,43 +82,61 @@ export function SearchPalette({ items }: { items: PaletteItem[] }) {
   }, [])
 
   /**
-   * Body results are filtered and ranked by the server, so they are waved through: filtering them
-   * again here would drop any result whose match is not a contiguous substring of the chunk, which
-   * a two-word query routinely is not. Titles are matched by substring, which is what `cmdk`'s own
-   * scorer resolves to on this archive's Korean titles anyway.
+   * Every row handed to `cmdk` has already been decided: titles by the substring match below, body
+   * results by the server. So nothing is filtered again here, which is both correct — a chunk
+   * matching `격리 구조` need not contain that string contiguously, and `cmdk` would have dropped
+   * it — and cheap, since `cmdk` no longer scores anything on each keystroke.
    */
-  const filter = React.useCallback((value: string, search: string, keywords?: string[]) => {
-    if (value.startsWith(SECTION_VALUE_PREFIX)) {
-      return 1
+  const filter = React.useCallback(() => 1, [])
+
+  const needle = search.trim().toLowerCase()
+  const typing = needle.length > 0
+
+  /** Filtered first, then capped — capping the archive before matching would hide anything past
+   * the newest few rows. */
+  const titleRows = React.useMemo(() => {
+    if (!typing) {
+      return items.slice(0, IDLE_ITEM_COUNT)
     }
 
-    const haystack = `${value} ${keywords?.join(" ") ?? ""}`.toLowerCase()
-    return haystack.includes(search.toLowerCase()) ? 1 : 0
-  }, [])
+    const rows: PaletteItem[] = []
 
-  const typing = input.trim().length > 0
-  const titleItems = typing ? items : items.slice(0, IDLE_ITEM_COUNT)
+    for (const item of items) {
+      if (item.title.toLowerCase().includes(needle)) {
+        rows.push(item)
 
-  const sections = React.useMemo(() => {
+        if (rows.length === MAX_TITLE_ROWS) {
+          break
+        }
+      }
+    }
+
+    return rows
+  }, [items, needle, typing])
+
+  const bodyRows = React.useMemo(() => {
     if (!Array.isArray(query.data)) {
       return []
     }
 
     const seen = new Set<string>()
+    const rows: BodyRow[] = []
 
-    return query.data.filter((result) => {
+    for (const result of query.data) {
       // A `page` result repeats what the title group already showed.
-      if (result.type === "page") {
-        return false
-      }
-
-      if (seen.has(result.content)) {
-        return false
+      if (result.type === "page" || seen.has(result.content)) {
+        continue
       }
 
       seen.add(result.content)
-      return true
-    })
+      rows.push(result)
+
+      if (rows.length === MAX_BODY_ROWS) {
+        break
+      }
+    }
+
+    return rows
   }, [query.data])
 
   /** Closing always resets the query, so the palette opens on the idle list rather than on the
@@ -116,7 +145,7 @@ export function SearchPalette({ items }: { items: PaletteItem[] }) {
     setOpen(next)
 
     if (!next) {
-      setInput("")
+      setSearch("")
     }
   }
 
@@ -125,7 +154,7 @@ export function SearchPalette({ items }: { items: PaletteItem[] }) {
     router.push(url)
   }
 
-  const loading = typing && query.isLoading && sections.length === 0
+  const loading = typing && query.isLoading && bodyRows.length === 0
 
   return (
     <CommandDialog
@@ -135,41 +164,40 @@ export function SearchPalette({ items }: { items: PaletteItem[] }) {
       description="제목으로 아이템을 찾거나 본문을 검색합니다."
     >
       <Command filter={filter}>
-        <CommandInput value={input} onValueChange={setInput} placeholder="아카이브 검색…" />
-        <CommandList className="max-h-[60vh]">
-          <CommandEmpty className="py-6 text-center text-sm">결과가 없습니다.</CommandEmpty>
+        <CommandInput value={search} onValueChange={setSearch} placeholder="아카이브 검색…" />
+        <CommandList>
+          <CommandEmpty>결과가 없습니다.</CommandEmpty>
 
           <CommandGroup heading={typing ? "아이템" : "최근"}>
-            {titleItems.map((item) => (
+            {titleRows.map((item) => (
               <CommandItem
                 key={item.number}
                 value={item.title}
                 onSelect={() => go(`/i/${item.number}`)}
               >
-                <span className="line-clamp-1 flex-1 text-sm">{item.title}</span>
-                <time className="text-foreground/50 text-xs tracking-tighter tabular-nums">
+                <span className="line-clamp-1 flex-1">{item.title}</span>
+                {/* `CommandShortcut`'s treatment, kept on a `time` element so the date stays a
+                    date. It brightens with the row the way that component does. */}
+                <time className="text-muted-foreground group-data-selected/command-item:text-foreground ml-auto text-xs tracking-widest tabular-nums">
                   {item.createdAt.slice(0, 10).replace(/-/g, ".")}
                 </time>
               </CommandItem>
             ))}
           </CommandGroup>
 
-          {typing && (loading || sections.length > 0) && (
+          {typing && (loading || bodyRows.length > 0) && (
             <>
               <CommandSeparator />
               <CommandGroup heading="본문">
                 {loading ? (
-                  <div className="text-foreground/50 px-2 py-1.5 text-sm">검색 중…</div>
+                  <div className="text-muted-foreground px-2 py-1.5 text-sm">검색 중…</div>
                 ) : (
-                  sections.map((result) => (
-                    <CommandItem
-                      key={result.id}
-                      value={`${SECTION_VALUE_PREFIX}${result.id}`}
-                      onSelect={() => go(result.url)}
-                    >
-                      {/* The chunk is dimmed so the matched run reads as the highlight without
-                          needing a colour of its own. */}
-                      <span className="text-foreground/55 line-clamp-2 text-sm">
+                  bodyRows.map((result) => (
+                    <CommandItem key={result.id} value={result.id} onSelect={() => go(result.url)}>
+                      {/* The chunk is muted so the matched run reads as the highlight without
+                          needing a colour of its own, and clamped to one line so every row keeps
+                          the 32px height the rest of the list has. */}
+                      <span className="text-muted-foreground line-clamp-1">
                         <Highlight text={result.content} />
                       </span>
                     </CommandItem>
@@ -197,7 +225,7 @@ function Highlight({ text }: { text: string }) {
     }
 
     parts.push(
-      <mark key={match.index} className="text-foreground bg-transparent font-semibold">
+      <mark key={match.index} className="text-foreground bg-transparent font-medium">
         {match[1]}
       </mark>
     )

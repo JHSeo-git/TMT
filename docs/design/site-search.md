@@ -40,10 +40,13 @@ fetches rather than one, and still nowhere near the hourly limit of 5,000. The a
 9KB on every page ever becomes the thing to cut, is a generated static JSON the palette fetches
 when it first opens, which trades an instant first tier on first open for zero page weight.
 
-The second tier is `useDocsSearch({ type: "fetch" })` against `/api/search`, debounced 300ms and
-wrapped in `startTransition`. Results arrive as `SortedResult` — `type` is `page`, `heading`, or
-`text`, `content` carries its own `<mark />` highlighting as Markdown, and `url` already includes
-the heading anchor. `FetchOptions` takes a `cache` map, so retyping a query costs no round trip.
+The second tier is `useDocsSearch({ type: "fetch", delayMs: 200 })` against `/api/search`. The
+hook keeps the typed value in `search` and debounces only the request behind it, so titles filter
+on the keystroke while the round trip waits — wrapping it in an effect and a timer of one's own
+just adds a second debounce on top. Results arrive as `SortedResult` — `type` is `page`, `heading`,
+or `text`, `content` carries its own `<mark />` highlighting as Markdown, and `url` already
+includes the heading anchor. `FetchOptions` takes a `cache` map, so retyping a query costs no round
+trip.
 
 The tiers overlap deliberately at the edges. `샌드박스` does not match the title `AI 에이전트
 샌드박싱` by exact filtering, and it would not match under any client-side filter, but Orama's
@@ -131,18 +134,33 @@ CommandDialog                        ⌘K · Ctrl+K · "/"
         └── CommandEmpty
 ```
 
-Duplicates are folded in two places. A tier-two `page` result repeats what tier one already showed
-by title, so it is dropped, and repeated identical chunks within one item collapse to the first —
-the residue of shredded table cells.
+Both groups cap their rows — 30 titles, 8 body results — and this is the difference between a
+palette and a stutter. The route answers with every match it holds, 1,129 body results for
+`에이전트`, and rendering them all put 1,185 rows and 6,811 nodes in a 288px window: `cmdk` refilters
+every mounted row per keystroke, so one keypress measured 185.7ms. Capped, the same keypress
+measures 7 to 22ms. The cap goes **after** matching; capping the archive first hides everything
+past the newest rows, which `트레이드` catches by returning the 293rd and last item.
+
+Nothing is filtered by `cmdk`. Titles are matched here by substring and body results were decided
+by the server, so every row handed over is a keeper and `cmdk` scores nothing. Duplicates are
+folded on the way in: a `page` result repeats what the title group already showed, so it is
+dropped, and repeated identical chunks within one item collapse to the first — the residue of
+shredded table cells.
 
 `⌘K`, `Ctrl+K`, and `/` open it, and all three are ignored while focus sits in an input, textarea,
 select, or contenteditable element. `Escape`, focus return, arrow navigation, and `Enter` belong to
 the dialog and to `cmdk`, so the component's own state is the open flag and the query string,
 nothing else.
 
-`cmdk`'s scoring was checked against Korean before being relied on, since every title in the
-archive is Korean and subsequence scoring is a plausible way to produce nonsense. Across 42
-title-query pairs its score agreed with a plain substring test every time, with no false positives.
+`cmdk`'s scoring was checked against Korean before any of this, since every title in the archive is
+Korean and subsequence scoring is a plausible way to produce nonsense. Across 42 title-query pairs
+it agreed with a plain substring test every time, with no false positives — which is also why
+replacing it with a substring match costs nothing here.
+
+Styling is the registry component's own, not overridden. Checked against the live component on
+shadcn's docs: rows 32px at 6px/8px padding, list 288px, group heading 12px, container 4px padding
+and 14px radius. Rows are clamped to one line so they all keep that height, and the muted tokens
+carry the contrast that makes a highlighted run read, rather than a colour of their own.
 
 ## The 100-item ceiling
 
