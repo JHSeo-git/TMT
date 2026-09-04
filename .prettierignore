@@ -1,3 +1,6 @@
 node_modules
 dist
 build 
+
+# generated, and 4.8MB of it
+lib/search-index.generated.json

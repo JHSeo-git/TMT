@@ -1,85 +1,121 @@
-import { structure, type StructuredData } from "fumadocs-core/mdx-plugins/remark-structure"
-import { createSearchAPI } from "fumadocs-core/search/server"
-
-import { getAllPublishedItems, type Item } from "./github"
-
-type SearchServer = ReturnType<typeof createSearchAPI>
-
-let server: SearchServer | undefined
+import entries from "./search-index.generated.json"
 
 /**
- * The search server, built once per process.
+ * A single searchable row: an item's heading, or a chunk of its text.
  *
- * Building costs around a second and a half for 293 items — `structure()` over every body and then
- * Orama's own index — so a cold instance pays it on its first query and every later query is
- * single-digit milliseconds. Holding it in module scope also means concurrent requests arriving
- * during that build share the one build instead of each starting another.
+ * The shape matches fumadocs' `SortedResult`, which is what its fetch client expects back from
+ * `/api/search`. Keeping the wire format lets `useDocsSearch` stay exactly as it was.
  */
-export function getSearchServer(): SearchServer {
-  server ??= createSearchAPI("advanced", { indexes: buildIndexes })
-  return server
+export interface SearchHit {
+  id: string
+  url: string
+  type: "heading" | "text"
+  content: string
 }
 
-async function buildIndexes() {
-  const items = await getAllPublishedItems()
-  return items.flatMap(toIndex)
-}
-
-function toIndex(item: Item) {
-  if (!item.body) {
-    return []
-  }
-
-  let structured: StructuredData
-
-  try {
-    structured = structure(item.body)
-  } catch (error) {
-    // One item whose Markdown will not parse must not take the whole index down with it.
-    console.error(`failed to structure item #${item.number}: `, error)
-    return []
-  }
-
-  const url = `/i/${item.number}`
-
-  return [
-    {
-      id: url,
-      url,
-      title: item.title,
-      // Nothing filters by topic yet. The field costs one value and makes `QueryOptions.tag` work
-      // the day something does.
-      tag: item.topics,
-      structuredData: clean(structured),
-    },
-  ]
+interface Row {
+  id: string
+  url: string
+  type: "heading" | "text"
+  content: string
+  /** Lowercased once, at module load, so a query never lowercases 17,000 strings again. */
+  haystack: string
 }
 
 /**
- * Drops the noise `structure()` leaves behind, all of it observed in its output rather than guessed
- * at: a GFM table is shredded into one chunk per cell, so a three-column table contributes chunks
- * reading `방식`, `오버헤드`, `격리`, and a blockquote keeps its `>` marker inside the text.
- * Single-token chunks are therefore dropped and a leading `>` is stripped. shadcn's own command
- * menu applies the same single-token filter, and tables are why.
+ * Every row, flattened at module load.
+ *
+ * There is no inverted index here, and that is the point. Building one over these 14,208 chunks
+ * cost 1,048ms locally, six seconds or so on a Vercel function, and 598MB resident — which on a
+ * host that meters CPU by memory allocation is a fight you lose twice. Scanning the rows instead
+ * costs 6ms to prepare and under a millisecond to query, in 40MB. An archive of 293 items is small
+ * enough that the index was the expensive way to do a cheap thing.
+ *
+ * What that gives up is Orama's typo tolerance — `샌트박스` no longer finds `샌드박스`. Prefixes
+ * still work, because a prefix is a substring.
  */
-function clean(data: StructuredData): StructuredData {
+const rows: Row[] = entries.flatMap((entry) => {
+  const out: Row[] = []
+
+  for (const heading of entry.structuredData.headings) {
+    out.push({
+      id: `${entry.url}#${heading.id}`,
+      url: `${entry.url}#${heading.id}`,
+      type: "heading",
+      content: heading.content,
+      haystack: heading.content.toLowerCase(),
+    })
+  }
+
+  for (const [index, chunk] of entry.structuredData.contents.entries()) {
+    const anchor = "heading" in chunk && chunk.heading ? `#${chunk.heading}` : ""
+
+    out.push({
+      id: `${entry.url}-${index}`,
+      url: `${entry.url}${anchor}`,
+      type: "text",
+      content: chunk.content,
+      haystack: chunk.content.toLowerCase(),
+    })
+  }
+
+  return out
+})
+
+/** How many hits to answer with. The palette renders eight after its own de-duplication. */
+const MAX_HITS = 32
+
+/** Wraps each matched run in `<mark>`, which is the highlighting fumadocs used to emit. */
+function highlight(content: string, terms: string[]): string {
+  let marked = content
+
+  for (const term of terms) {
+    const pattern = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi")
+    marked = marked.replace(pattern, (match) => `<mark>${match}</mark>`)
+  }
+
+  return marked
+}
+
+/**
+ * Rows holding every term, newest item first.
+ *
+ * Every term rather than any: a chunk carrying both `격리` and `구조` is what someone typing two
+ * words is looking for, and ranking a long list of one-term matches is the job an index would be
+ * for. The rows arrive newest-first from the generator and keep that order, which is the order the
+ * archive itself reads in.
+ */
+export function searchArchive(query: string): SearchHit[] {
+  const terms = query.toLowerCase().trim().split(/\s+/).filter(Boolean)
+
+  if (terms.length === 0) {
+    return []
+  }
+
+  const hits: SearchHit[] = []
   const seen = new Set<string>()
 
-  return {
-    headings: data.headings,
-    contents: data.contents
-      .map((content) => ({ ...content, content: content.content.replace(/^>\s*/, "").trim() }))
-      .filter((content) => {
-        if (content.content.split(/\s+/).length <= 1) {
-          return false
-        }
+  for (const row of rows) {
+    if (!terms.every((term) => row.haystack.includes(term))) {
+      continue
+    }
 
-        if (seen.has(content.content)) {
-          return false
-        }
+    if (seen.has(row.content)) {
+      continue
+    }
 
-        seen.add(content.content)
-        return true
-      }),
+    seen.add(row.content)
+    hits.push({
+      id: row.id,
+      url: row.url,
+      type: row.type,
+      content: highlight(row.content, terms),
+    })
+
+    if (hits.length === MAX_HITS) {
+      break
+    }
   }
+
+  return hits
 }

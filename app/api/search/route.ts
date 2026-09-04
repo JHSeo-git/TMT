@@ -1,5 +1,7 @@
-import { getSearchServer } from "@/lib/search-index"
+import { searchArchive } from "@/lib/search-index"
 
 export async function GET(request: Request) {
-  return getSearchServer().GET(request)
+  const query = new URL(request.url).searchParams.get("query") ?? ""
+
+  return Response.json(searchArchive(query))
 }

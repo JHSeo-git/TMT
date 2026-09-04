@@ -12,10 +12,10 @@ items, average 8,306 characters of body and eleven headings each.
 
 | | Measured | Consequence |
 | --- | --- | --- |
-| Serialized advanced index, 293 items | 43MB, 10.4MB gzipped | The index cannot be shipped to the browser |
-| Index build, 293 items | 1.70s (`structure()` 807ms + Orama 889ms) | Cold cost is real; it must not sit in front of the first keystroke |
-| Warm query | 2–27ms against the real archive, by term | Once built, the route is not the bottleneck |
-| Cold query, end to end | 5.0–5.7s (3.2s of GitHub requests, then the build) | The fetch costs more than the build does |
+| Serialized advanced index, 293 items | 27MB, 7MB gzipped | Too large for the browser, and too slow to rebuild per request |
+| Orama index build, 293 items | 1,048ms and 598MB resident | Why there is no index at all now |
+| Warm query | 1–5ms against the real archive, by term | Once built, the route is not the bottleneck |
+| Cold query, end to end | 46ms scanning the baked rows | Building an index per process ran past Vercel's 10s limit |
 | Index process RSS | 413MB | Function memory is a thing to watch after deploy |
 | Titles, 293 items | 24KB, 7KB gzipped, as served | Cheap enough to send with every page |
 | Body text capped at 2,000 chars | 1.5MB / 330KB gzipped | A trimmed static index is possible but gives up full-text |
@@ -96,18 +96,38 @@ capability and revives the display-name mapping in `lib/labels.ts` that has been
 
 ## The route
 
-`app/api/search/route.ts` delegates to the `GET` handler `createSearchAPI` returns. It carries no
-caching, on purpose. A cold instance answers its first query in about five seconds — 3.2s of that
-is the three GitHub requests, the rest the build — and that shows up only as full-text results
-arriving late while tier one has already answered; warm queries land between 2 and 27ms. Three
-requests per cold start against an hourly limit of 5,000 is not worth optimising.
+`app/api/search/route.ts` reads the query and scans. There is no inverted index, and that is the
+point.
 
-Caching was left out rather than forgotten. `unstable_cache` has a per-entry size limit that 2.4MB
-of bodies would run into, so it would have to be split per page of results, and Next 16's
-`"use cache"` needs the top-level `cacheComponents` flag, which changes caching and prerendering
-for the whole app — too much to turn on for one route. If cold starts do start to bite, the first
-thing to reach for is computing `structure()` at build time and baking it into the deployment,
-since the site is already static and content only changes on redeploy.
+Building one was the first two attempts and both failed on the deployment. Assembling the entries
+inside the route — three GitHub requests, then `structure()` over 293 bodies — measured 4.8s
+locally and answered `FUNCTION_INVOCATION_TIMEOUT` on Vercel's 10s function limit. Baking the
+entries at build time cut that to 1.2s locally and it still timed out, because what remained was
+Orama's own index: 1,048ms of CPU over 14,208 chunks, holding 598MB resident. On a host that
+meters CPU by memory allocation that is a fight you lose twice, and the numbers from the deployment
+put the cold path near twelve seconds.
+
+So the rows are scanned instead. `lib/search-index.ts` flattens the baked entries into one array of
+headings and chunks at module load — 6ms, 40MB — and a query keeps the rows holding every one of
+its terms. A cold first query answers in 46ms and the ones after it in single-digit milliseconds.
+An archive of 293 items is small enough that the index was the expensive way to do a cheap thing.
+
+| | Index | Scan |
+| --- | --- | --- |
+| Cold, ready to answer | 1,048ms, 598MB | 6ms, 40MB |
+| First query end to end | 1.2s local, timed out deployed | 46ms |
+| Later queries | 46ms | 1–5ms |
+
+Two things go with it. Orama's typo tolerance is gone — `샌트박스` no longer reaches `샌드박스` —
+though prefixes still work, because a prefix is a substring. And a multi-term query now means every
+term rather than any, so `격리 구조` answers with the four chunks carrying both words instead of
+several hundred carrying either; ranking a long list of one-term matches is the job the index was
+for, and precision suits looking for a sentence you half remember.
+
+The wire format is unchanged. fumadocs' fetch client asks `/api/search?query=…` for an array of
+`{ id, url, type, content }` with `<mark>` in the content, so `useDocsSearch` keeps its debounce,
+its cache, and its loading flag without knowing any of this happened. Each term is highlighted
+rather than only the one the engine matched on.
 
 ## The palette
 
