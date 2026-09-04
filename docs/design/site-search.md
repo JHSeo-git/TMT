@@ -111,7 +111,16 @@ since the site is already static and content only changes on redeploy.
 
 ## The palette
 
-`components/search-palette.tsx`, built on shadcn's `command`. Under this repo's `base-vega` style
+`components/search-palette.tsx` holds both halves. `SearchProvider` wraps the app in the root
+layout, owns the open flag, and renders the dialog; `SearchTrigger` sits in the list page's own
+header, beside the `New` button, and opens it through a context the provider supplies — the two
+cannot be siblings, since one belongs to the layout and the other to a page. The trigger takes the
+`sm` button's height and radius so the pair sits flush, but is filled rather than outlined: it
+opens a search field, and reading as one says that before the label does. Its `⌘`/`Ctrl` hint is
+read through `useSyncExternalStore` with a `null` server snapshot, because the platform is not
+knowable during the server render and an effect that sets state is not the way to find out.
+
+The palette itself is built on shadcn's `command`. Under this repo's `base-vega` style
 that component composes `@base-ui/react/dialog` and `input-group` for its shell, so the rendered
 tree stays on Base UI; the palette engine itself is `cmdk`.
 

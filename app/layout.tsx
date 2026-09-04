@@ -6,7 +6,7 @@ import { ViewTransitions } from "next-view-transitions"
 
 import { getAllPublishedItems } from "@/lib/github"
 import { cn } from "@/lib/utils"
-import { SearchPalette } from "@/components/search-palette"
+import { SearchProvider } from "@/components/search-palette"
 
 const pretendard = localFont({
   src: "./PretendardVariable.woff2",
@@ -48,11 +48,12 @@ export default async function RootLayout({
     <ViewTransitions>
       <html lang="ko">
         <body className={cn("antialiased", pretendard.variable, geistMono.variable)}>
-          <div className="bg-background text-foreground flex min-h-screen flex-col justify-between p-8 pt-0 pb-0 md:pt-8">
-            <main className="mx-auto w-full max-w-[60ch]">{children}</main>
-            <Footer />
-          </div>
-          <SearchPalette items={paletteItems} />
+          <SearchProvider items={paletteItems}>
+            <div className="bg-background text-foreground flex min-h-screen flex-col justify-between p-8 pt-0 pb-0 md:pt-8">
+              <main className="mx-auto w-full max-w-[60ch]">{children}</main>
+              <Footer />
+            </div>
+          </SearchProvider>
         </body>
       </html>
     </ViewTransitions>

@@ -2,8 +2,10 @@
 
 import * as React from "react"
 import { useDocsSearch } from "fumadocs-core/search/client"
+import { SearchIcon } from "lucide-react"
 import { useTransitionRouter } from "next-view-transitions"
 
+import { cn } from "@/lib/utils"
 import {
   Command,
   CommandDialog,
@@ -41,7 +43,19 @@ const IDLE_ITEM_COUNT = 10
 const MAX_TITLE_ROWS = 30
 const MAX_BODY_ROWS = 8
 
-export function SearchPalette({ items }: { items: PaletteItem[] }) {
+/**
+ * Lets a trigger anywhere under the provider open the palette. The palette lives in the root
+ * layout and the trigger sits in a page's own header, so the two cannot be siblings.
+ */
+const OpenSearchContext = React.createContext<(() => void) | null>(null)
+
+export function SearchProvider({
+  items,
+  children,
+}: {
+  items: PaletteItem[]
+  children: React.ReactNode
+}) {
   const router = useTransitionRouter()
   const [open, setOpen] = React.useState(false)
 
@@ -155,54 +169,125 @@ export function SearchPalette({ items }: { items: PaletteItem[] }) {
 
   const loading = typing && query.isLoading && bodyRows.length === 0
 
+  const openSearch = React.useCallback(() => setOpen(true), [])
+
   return (
-    <CommandDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Search the archive"
-      description="Find a page by title, or search the text inside one."
-    >
-      <Command filter={filter}>
-        <CommandInput value={search} onValueChange={setSearch} placeholder="Search the archive…" />
-        <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
+    <OpenSearchContext.Provider value={openSearch}>
+      {children}
 
-          <CommandGroup heading={typing ? "Pages" : "Recent"}>
-            {titleRows.map((item) => (
-              <CommandItem
-                key={item.number}
-                value={item.title}
-                onSelect={() => go(`/i/${item.number}`)}
-              >
-                <span className="line-clamp-1">{item.title}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
+      <CommandDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Search the archive"
+        description="Find a page by title, or search the text inside one."
+      >
+        <Command filter={filter}>
+          <CommandInput
+            value={search}
+            onValueChange={setSearch}
+            placeholder="Search the archive…"
+          />
+          <CommandList>
+            <CommandEmpty>No results found.</CommandEmpty>
 
-          {typing && (loading || bodyRows.length > 0) && (
-            <>
-              <CommandSeparator />
-              <CommandGroup heading="Text">
-                {loading ? (
-                  <div className="text-muted-foreground px-2 py-1.5 text-sm">Searching…</div>
-                ) : (
-                  bodyRows.map((result) => (
-                    <CommandItem key={result.id} value={result.id} onSelect={() => go(result.url)}>
-                      {/* The chunk is muted so the matched run reads as the highlight without
+            <CommandGroup heading={typing ? "Pages" : "Recent"}>
+              {titleRows.map((item) => (
+                <CommandItem
+                  key={item.number}
+                  value={item.title}
+                  onSelect={() => go(`/i/${item.number}`)}
+                >
+                  <span className="line-clamp-1">{item.title}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+
+            {typing && (loading || bodyRows.length > 0) && (
+              <>
+                <CommandSeparator />
+                <CommandGroup heading="Text">
+                  {loading ? (
+                    <div className="text-muted-foreground px-2 py-1.5 text-sm">Searching…</div>
+                  ) : (
+                    bodyRows.map((result) => (
+                      <CommandItem
+                        key={result.id}
+                        value={result.id}
+                        onSelect={() => go(result.url)}
+                      >
+                        {/* The chunk is muted so the matched run reads as the highlight without
                           needing a colour of its own, and clamped to one line so every row keeps
                           the 32px height the rest of the list has. */}
-                      <span className="text-muted-foreground line-clamp-1">
-                        <Highlight text={result.content} />
-                      </span>
-                    </CommandItem>
-                  ))
-                )}
-              </CommandGroup>
-            </>
-          )}
-        </CommandList>
-      </Command>
-    </CommandDialog>
+                        <span className="text-muted-foreground line-clamp-1">
+                          <Highlight text={result.content} />
+                        </span>
+                      </CommandItem>
+                    ))
+                  )}
+                </CommandGroup>
+              </>
+            )}
+          </CommandList>
+        </Command>
+      </CommandDialog>
+    </OpenSearchContext.Provider>
+  )
+}
+
+/**
+ * Opens the palette. Sits in a page's header rather than the layout, so it reaches the palette
+ * through the context above.
+ */
+export function SearchTrigger({ className }: { className?: string }) {
+  const openSearch = React.useContext(OpenSearchContext)
+
+  if (!openSearch) {
+    throw new Error("SearchTrigger must be rendered inside SearchProvider.")
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={openSearch}
+      // `h-8` and the radius match the `sm` button beside it so the pair sits flush. Filled rather
+      // than outlined: this opens a search field, and reading as one tells you that before the
+      // label does.
+      className={cn(
+        "bg-muted text-muted-foreground hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex h-8 w-40 items-center gap-2 rounded-[min(var(--radius-md),10px)] pr-1.5 pl-2.5 text-sm transition-colors focus-visible:ring-[3px] focus-visible:outline-none",
+        className
+      )}
+    >
+      <SearchIcon className="size-4 shrink-0" />
+      <span className="flex-1 text-left">Search</span>
+      <SearchShortcutHint />
+    </button>
+  )
+}
+
+/** Nothing to subscribe to — the platform does not change while the page is open. */
+const noSubscription = () => () => {}
+
+/**
+ * Which modifier to name depends on the platform, which the server cannot know, so it renders
+ * nothing there and fills in on hydration. `useSyncExternalStore` is how to read a browser value
+ * with a server fallback without reaching for an effect. The button's width is fixed, so nothing
+ * moves when the hint arrives.
+ */
+function SearchShortcutHint() {
+  const modifier = React.useSyncExternalStore(
+    noSubscription,
+    () => (/mac|iphone|ipad/i.test(navigator.userAgent) ? "⌘" : "Ctrl "),
+    () => null
+  )
+
+  if (!modifier) {
+    return null
+  }
+
+  return (
+    <kbd className="bg-background text-muted-foreground pointer-events-none rounded border px-1 py-0.5 font-mono text-[10px] leading-none select-none">
+      {modifier}K
+    </kbd>
   )
 }
 

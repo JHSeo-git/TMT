@@ -4,6 +4,13 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-09-04 - The list page gets a search button
+
+- `⌘K` and `/` were the only ways in, which is fine once you know and invisible until then. The list page's header now carries a search button to the left of `New`, the shape shadcn and Fumadocs both put in their own headers: a search icon, the word `Search`, and the shortcut on the right.
+- It takes the `sm` button's height and radius — both measure 32px tall at an 8px radius and sit on the same baseline — but is filled with `bg-muted` rather than outlined. Two outlined buttons side by side would read as two actions of equal weight; this one opens a search field, and looking like one says so before the label does. That is also how shadcn draws theirs.
+- The shortcut hint names `⌘` on Apple platforms and `Ctrl` elsewhere. The server cannot know which, so it renders nothing there and fills in on hydration through `useSyncExternalStore` with a `null` server snapshot — `react-hooks/set-state-in-effect` rejects the effect-and-setState version of this, and rightly. The button's width is fixed, so nothing moves when the hint arrives.
+- Wiring it needed the palette split in two. `SearchPalette` becomes `SearchProvider`, which wraps the app in the root layout and hands an opener down through context; `SearchTrigger` reads it. The palette belongs to the layout and the trigger to a page, so they cannot be siblings, and a context is the honest way to say that rather than synthesising a `⌘K` keypress from the click handler.
+
 ## 2026-09-04 - Every palette row looked selected, and the labels are English
 
 - Opening the palette drew every row with the selected background, which made the list read as one solid block. `command.tsx` styles the selected row with `data-selected:bg-muted`, and that compiled here to `.data-selected\:bg-muted[data-selected]` — an attribute-**presence** selector. `cmdk` writes `data-selected="false"` on every row it has not selected, so the attribute is always there and the rule always applied.

@@ -3,22 +3,26 @@ import { Link } from "next-view-transitions"
 import { config, getAllPublishedItems, type Item } from "@/lib/github"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import { SearchTrigger } from "@/components/search-palette"
 
 export default async function Page() {
   const items = await getAllPublishedItems()
 
   return (
     <>
-      <div className="mt-10 flex items-center justify-between">
+      <div className="mt-10 flex items-center justify-between gap-2">
         <h1 className="m-0 cursor-default font-semibold">TMT</h1>
-        <a
-          href={`https://github.com/${config.owner}/${config.repo}/issues/new?template=Blank+issue`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-        >
-          New
-        </a>
+        <div className="flex items-center gap-2">
+          <SearchTrigger />
+          <a
+            href={`https://github.com/${config.owner}/${config.repo}/issues/new?template=Blank+issue`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+          >
+            New
+          </a>
+        </div>
       </div>
       <article>
         {groupByYear(items).map(([year, yearItems]) => (
