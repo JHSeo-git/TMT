@@ -4,7 +4,7 @@ import defaultComponents from "fumadocs-ui/mdx"
 import { SquarePen } from "lucide-react"
 import { Link } from "next-view-transitions"
 
-import { getIssueByNo, getIssues } from "@/lib/github"
+import { getAllPublishedItems, getIssueByNo } from "@/lib/github"
 import { compiler, components } from "@/components/mdx-remote"
 import { TocRail } from "@/components/toc"
 
@@ -16,10 +16,10 @@ interface PageParams {
 }
 
 export async function generateStaticParams(): Promise<PageParams[]> {
-  const { issues } = await getIssues()
+  const items = await getAllPublishedItems()
 
-  return issues.map((issue) => ({
-    issueNo: issue.number.toString(),
+  return items.map((item) => ({
+    issueNo: item.number.toString(),
   }))
 }
 
