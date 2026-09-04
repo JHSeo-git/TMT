@@ -35,7 +35,7 @@
     "react-medium-image-zoom": "^5.4.9",
     "react-tweet": "^3.3.1",
     "recma-mdx-html-override": "^1.1.6",
-    "tailwindcss-animate": "^1.0.7",
+    "shadcn": "^4.21.0",
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
