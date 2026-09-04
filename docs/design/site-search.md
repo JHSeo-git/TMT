@@ -14,9 +14,10 @@ items, average 8,306 characters of body and eleven headings each.
 | --- | --- | --- |
 | Serialized advanced index, 293 items | 43MB, 10.4MB gzipped | The index cannot be shipped to the browser |
 | Index build, 293 items | 1.70s (`structure()` 807ms + Orama 889ms) | Cold cost is real; it must not sit in front of the first keystroke |
-| Warm query | 7–28ms | Once built, the route is not the bottleneck |
+| Warm query | 2–27ms against the real archive, by term | Once built, the route is not the bottleneck |
+| Cold query, end to end | 5.0–5.7s (3.2s of GitHub requests, then the build) | The fetch costs more than the build does |
 | Index process RSS | 413MB | Function memory is a thing to watch after deploy |
-| Titles and dates, 293 items | 24KB, 10KB gzipped | Cheap enough to send with every page |
+| Titles and dates, 293 items | 35KB, 9KB gzipped, as served | Cheap enough to send with every page |
 | Body text capped at 2,000 chars | 1.5MB / 330KB gzipped | A trimmed static index is possible but gives up full-text |
 
 The first row is the whole reason the search runs on the server, and the last row is the reason it
@@ -26,8 +27,8 @@ is not worth trying to avoid that. The fifth row is the reason there is a first 
 
 The first tier costs nothing extra. Once the list at `/` renders all 293 items, their titles are
 already in the HTML; the palette receives the same array from `app/layout.tsx` so it works on item
-pages too, at 10KB gzipped per page. Filtering is exact and instant, which is what finding a known
-item wants.
+pages too, at 9KB gzipped per page — 35KB raw, measured against the deployed build of the same
+item. Filtering is exact and instant, which is what finding a known item wants.
 
 Putting it in the layout has one cost worth naming, because getting it wrong is expensive rather
 than merely untidy. `app/layout.tsx` is currently a synchronous component with no fetch in it, and
@@ -36,7 +37,7 @@ of the ~298 prerendered pages — three GitHub requests each, near 900 for a bui
 So `getAllPublishedItems` memoises its promise at module scope. That is a requirement of this
 design, not an optimisation; Next builds across several workers, so the result is a handful of
 fetches rather than one, and still nowhere near the hourly limit of 5,000. The alternative, if
-10KB on every page ever becomes the thing to cut, is a generated static JSON the palette fetches
+9KB on every page ever becomes the thing to cut, is a generated static JSON the palette fetches
 when it first opens, which trades an instant first tier on first open for zero page weight.
 
 The second tier is `useDocsSearch({ type: "fetch" })` against `/api/search`, debounced 300ms and
@@ -91,9 +92,10 @@ capability and revives the display-name mapping in `lib/labels.ts` that has been
 ## The route
 
 `app/api/search/route.ts` delegates to the `GET` handler `createSearchAPI` returns. It carries no
-caching, on purpose. A cold instance pays three GitHub requests plus the 1.70s build, and that
-shows up only as full-text results arriving late while tier one has already answered; warm queries
-are 7–28ms. Three requests per cold start against an hourly limit of 5,000 is not worth optimising.
+caching, on purpose. A cold instance answers its first query in about five seconds — 3.2s of that
+is the three GitHub requests, the rest the build — and that shows up only as full-text results
+arriving late while tier one has already answered; warm queries land between 2 and 27ms. Three
+requests per cold start against an hourly limit of 5,000 is not worth optimising.
 
 Caching was left out rather than forgotten. `unstable_cache` has a per-entry size limit that 2.4MB
 of bodies would run into, so it would have to be split per page of results, and Next 16's
@@ -180,7 +182,8 @@ a change to the route and the hook rather than to the design.
 Fenced code blocks are not indexed, because `structure()` emits no chunk for them. Searching for an
 API name that only ever appears inside a code block will not find it.
 
-A cold instance answers its first full-text query about 1.7s late, plus the GitHub round trip. Tier
+A cold instance answers its first full-text query about five seconds late, most of it the GitHub
+round trip. Tier
 one hides this for title lookups and nothing hides it for phrase lookups.
 
 Korean inflection is not handled by tier one — `샌드박스` does not match a title reading
