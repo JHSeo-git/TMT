@@ -4,7 +4,9 @@ import type { Metadata } from "next"
 import localFont from "next/font/local"
 import { ViewTransitions } from "next-view-transitions"
 
+import { getAllPublishedItems } from "@/lib/github"
 import { cn } from "@/lib/utils"
+import { SearchProvider } from "@/components/search-palette"
 
 const pretendard = localFont({
   src: "./PretendardVariable.woff2",
@@ -28,19 +30,30 @@ export const metadata: Metadata = {
   description: "Too many thoughts",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Trimmed to what the palette's title search needs — a number and a title, nothing else. That
+  // costs a few KB gzipped on every page, and `getAllPublishedItems` memoises, so a build does not
+  // refetch this per route.
+  const items = await getAllPublishedItems()
+  const paletteItems = items.map((item) => ({
+    number: item.number,
+    title: item.title,
+  }))
+
   return (
     <ViewTransitions>
       <html lang="ko">
         <body className={cn("antialiased", pretendard.variable, geistMono.variable)}>
-          <div className="bg-background text-foreground flex min-h-screen flex-col justify-between p-8 pt-0 pb-0 md:pt-8">
-            <main className="mx-auto w-full max-w-[60ch]">{children}</main>
-            <Footer />
-          </div>
+          <SearchProvider items={paletteItems}>
+            <div className="bg-background text-foreground flex min-h-screen flex-col justify-between p-8 pt-0 pb-0 md:pt-8">
+              <main className="mx-auto w-full max-w-[60ch]">{children}</main>
+              <Footer />
+            </div>
+          </SearchProvider>
         </body>
       </html>
     </ViewTransitions>

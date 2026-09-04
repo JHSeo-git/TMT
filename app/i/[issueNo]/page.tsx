@@ -4,7 +4,7 @@ import defaultComponents from "fumadocs-ui/mdx"
 import { SquarePen } from "lucide-react"
 import { Link } from "next-view-transitions"
 
-import { getIssueByNo, getIssues } from "@/lib/github"
+import { getAllPublishedItems, getIssueByNo } from "@/lib/github"
 import { compiler, components } from "@/components/mdx-remote"
 import { TocRail } from "@/components/toc"
 
@@ -16,10 +16,10 @@ interface PageParams {
 }
 
 export async function generateStaticParams(): Promise<PageParams[]> {
-  const { issues } = await getIssues()
+  const items = await getAllPublishedItems()
 
-  return issues.map((issue) => ({
-    issueNo: issue.number.toString(),
+  return items.map((item) => ({
+    issueNo: item.number.toString(),
   }))
 }
 
@@ -28,9 +28,10 @@ interface PageProps {
 }
 
 /**
- * Resolves the route's issue or renders the not-found page. An unparseable number and a number with
- * no issue behind it are both a bad URL rather than a server fault, so this route answers 404 for
- * either. Every other failure keeps travelling to the error boundary.
+ * Resolves the route's item or renders the not-found page. An unparseable number, a number with no
+ * item behind it, and an item the publish gate rejects are all a bad URL rather than a server
+ * fault, so this route answers 404 for each. Every other failure keeps travelling to the error
+ * boundary.
  */
 async function loadIssue(params: PageProps["params"]) {
   const issueNo = parseInt((await params).issueNo, 10)
@@ -39,14 +40,13 @@ async function loadIssue(params: PageProps["params"]) {
     notFound()
   }
 
-  try {
-    return await getIssueByNo(issueNo)
-  } catch (error) {
-    if ((error as { status?: number }).status === 404) {
-      notFound()
-    }
-    throw error
+  const issue = await getIssueByNo(issueNo)
+
+  if (!issue) {
+    notFound()
   }
+
+  return issue
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -70,9 +70,7 @@ export default async function IssuePage({ params }: PageProps) {
       <TocRail toc={toc} />
 
       <article className="markdown-body prose my-10">
-        <h1 className="not-prose font-heading mt-2 scroll-m-20 text-xl font-bold">
-          {response.title}
-        </h1>
+        <h1 className="not-prose mt-2 scroll-m-20 text-xl font-bold">{response.title}</h1>
         <Link href=".." className="not-prose text-link text-sm font-medium">
           TMT
         </Link>
