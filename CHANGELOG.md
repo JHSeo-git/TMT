@@ -4,6 +4,14 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-09-04 - The list shows every published item, grouped by year
+
+- `getIssues` defaulted to one page of 100 and nothing ever asked for a second, so `/` listed the newest 100 of 293 published items and `generateStaticParams` prerendered the same 100. 193 items were on the site only if you already knew the number. The build now generates 298 pages rather than 105, and `/` carries 293 item links rather than 100.
+- `getAllPublishedItems` replaces it and walks every page with `octokit.paginate`. That deleted the hand-rolled `Link` header parsing, which only ever looked for `&page=` and would have missed a `?page=` first parameter, and it keeps the `body` the old mapping threw away — the list endpoint returns it, so 293 full bodies now arrive in three requests instead of 293. The search index is built from exactly that.
+- `nextIssueNo` and `prevIssueNo` were deleted rather than fixed. They were computed within a single page, so they broke at the 100-item boundary, and nothing has ever read them.
+- The list renders all 293 in one page under a heading per year — 151 for 2026, 130 for 2025, 12 for 2024 — rather than paginating. This is an archive index; one scannable list is the honest presentation, and `⌘K` covers what pagination would otherwise be for. The row shape is unchanged: title left, right-aligned date, tabular numerals.
+- `getAllPublishedItems` memoises its promise at module scope. That is load-bearing, not an optimisation: the root layout awaits it to give the palette its titles, and a layout renders once per route, so without the memo a build would repeat three GitHub requests for every one of 298 pages.
+
 ## 2026-09-04 - The publish gate is checked when an item renders
 
 - `/i/270`, `/i/292`, and `/i/302` answered `200` with a fully rendered body while carrying no `published` label, so none of them appeared in the list. One is a personal record and two are scratch items, which means counting from `/i/1` to `/i/321` walked the whole of a private archive. All three now answer `404`, and `/i/321` and `/i/1` still render.

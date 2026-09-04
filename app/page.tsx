@@ -1,6 +1,6 @@
 import { Link } from "next-view-transitions"
 
-import { config, getAllPublishedItems } from "@/lib/github"
+import { config, getAllPublishedItems, type Item } from "@/lib/github"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
@@ -21,24 +21,49 @@ export default async function Page() {
         </a>
       </div>
       <article>
-        <ul className="mt-4">
-          {items.map((item) => (
-            <li key={item.id}>
-              <Link href={`/i/${item.number}`} className="group flex items-center gap-1 py-1.5">
-                <span className="text-sm text-slate-700 group-hover:text-slate-900">
-                  {item.title}
-                </span>
-                <span className="flex-1 overflow-hidden"></span>
-                <time className="text-foreground/50 group-hover:text-foreground block text-sm tracking-tighter tabular-nums transition-colors group-hover:transition-none">
-                  {formatDate(item.createdAt)}
-                </time>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {groupByYear(items).map(([year, yearItems]) => (
+          <section key={year} className="mt-8">
+            <h2 className="text-foreground/40 border-border m-0 border-b pb-1 text-xs font-medium tracking-widest tabular-nums">
+              {year}
+            </h2>
+            <ul className="mt-2">
+              {yearItems.map((item) => (
+                <li key={item.id}>
+                  <Link href={`/i/${item.number}`} className="group flex items-center gap-1 py-1.5">
+                    <span className="text-sm text-slate-700 group-hover:text-slate-900">
+                      {item.title}
+                    </span>
+                    <span className="flex-1 overflow-hidden"></span>
+                    <time className="text-foreground/50 group-hover:text-foreground block text-sm tracking-tighter tabular-nums transition-colors group-hover:transition-none">
+                      {formatDate(item.createdAt)}
+                    </time>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </article>
     </>
   )
+}
+
+/** Items arrive newest first, so grouping in encounter order already yields years descending. */
+function groupByYear(items: Item[]): [string, Item[]][] {
+  const groups = new Map<string, Item[]>()
+
+  for (const item of items) {
+    const year = new Date(item.createdAt).getFullYear().toString()
+    const group = groups.get(year)
+
+    if (group) {
+      group.push(item)
+    } else {
+      groups.set(year, [item])
+    }
+  }
+
+  return [...groups]
 }
 
 function formatDate(dateString: string) {
