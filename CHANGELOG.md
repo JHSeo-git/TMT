@@ -4,6 +4,11 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-09-04 - An empty package and a commented-out stylesheet leave
+
+- `hast` is gone from `dependencies`. The package at that name is a stub — its description reads "Renamed to rehype" and it ships nothing but a `package.json` and a readme, with no `main` and no `types` — so `import type { Element, Root } from "hast"` in the two rehype plugins was always resolving through `@types/hast` instead. Confirmed by moving the package aside and building: TypeScript and all 299 pages pass without it. A type-only import listed as a production dependency, pointing at an empty package.
+- The 40 commented-out lines in `app/globals.css` are gone: an `@supports (view-transition-name: none)` block with `@keyframes hide` and `appear` behind it, a hand-written crossfade that has been switched off. `next-view-transitions` is still very much in use — `ViewTransitions`, `Link`, and `useTransitionRouter` all are — this was just a disabled experiment sitting in the middle of the file. `globals.css` goes from 266 lines to 225, and the shipped stylesheet is byte-for-byte identical at 135,043 bytes, because commented CSS never reached it.
+
 ## 2026-09-04 - Next stops writing agent rules, and a dead class goes
 
 - Next 16 writes `AGENTS.md` and `CLAUDE.md` at the project root on every dev run and build, so an agent reads version-matched docs out of `node_modules/next/dist/docs/` rather than its training data. Useful default, wrong for here: they are generated output, and ADR 0001 keeps generated output out of the directories this repository maintains by hand — `docs/generate/` was deleted for that reason. `agentRules: false` in `next.config.ts` turns it off, and both files are gone; confirmed by a build and a dev run that no longer regenerate them.
