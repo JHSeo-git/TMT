@@ -4,6 +4,11 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-09-04 - Next stops writing agent rules, and a dead class goes
+
+- Next 16 writes `AGENTS.md` and `CLAUDE.md` at the project root on every dev run and build, so an agent reads version-matched docs out of `node_modules/next/dist/docs/` rather than its training data. Useful default, wrong for here: they are generated output, and ADR 0001 keeps generated output out of the directories this repository maintains by hand — `docs/generate/` was deleted for that reason. `agentRules: false` in `next.config.ts` turns it off, and both files are gone; confirmed by a build and a dev run that no longer regenerate them.
+- `font-heading` came off the four heading components in `components/mdx-remote.tsx` and the item page's `h1`. Nothing defined it — not `app/globals.css`, not the fumadocs preset, not `shadcn/tailwind.css` — so `.font-heading` was never emitted and the class had no effect in any of the five places it was written. Defining it was the alternative; deleting it is what the headings were already doing.
+
 ## 2026-09-04 - The list page gets a search button
 
 - `⌘K` and `/` were the only ways in, which is fine once you know and invisible until then. The list page's header now carries a search button to the left of `New`, the shape shadcn and Fumadocs both put in their own headers: a search icon, the word `Search`, and the shortcut on the right.

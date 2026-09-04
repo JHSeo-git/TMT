@@ -70,9 +70,7 @@ export default async function IssuePage({ params }: PageProps) {
       <TocRail toc={toc} />
 
       <article className="markdown-body prose my-10">
-        <h1 className="not-prose font-heading mt-2 scroll-m-20 text-xl font-bold">
-          {response.title}
-        </h1>
+        <h1 className="not-prose mt-2 scroll-m-20 text-xl font-bold">{response.title}</h1>
         <Link href=".." className="not-prose text-link text-sm font-medium">
           TMT
         </Link>
