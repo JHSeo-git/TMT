@@ -4,6 +4,12 @@ import entries from "./search-index.generated.json"
 
 type SearchServer = ReturnType<typeof createSearchAPI>
 
+/**
+ * The baked entries, exposed so the route's diagnostic can time building over slices of them.
+ * See the note in `getSearchServer` for why the cast is here.
+ */
+export const searchIndexEntries = entries as AdvancedIndex[]
+
 let server: SearchServer | undefined
 
 /**
@@ -23,6 +29,6 @@ export function getSearchServer(): SearchServer {
    * at all. Reading `content.heading` gives `undefined` either way; only the type can tell the
    * difference.
    */
-  server ??= createSearchAPI("advanced", { indexes: entries as AdvancedIndex[] })
+  server ??= createSearchAPI("advanced", { indexes: searchIndexEntries })
   return server
 }
