@@ -4,7 +4,9 @@ import type { Metadata } from "next"
 import localFont from "next/font/local"
 import { ViewTransitions } from "next-view-transitions"
 
+import { getAllPublishedItems } from "@/lib/github"
 import { cn } from "@/lib/utils"
+import { SearchPalette } from "@/components/search-palette"
 
 const pretendard = localFont({
   src: "./PretendardVariable.woff2",
@@ -28,11 +30,20 @@ export const metadata: Metadata = {
   description: "Too many thoughts",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Trimmed to what the palette's title search needs. Sending all 293 costs about 10KB gzipped on
+  // every page, and `getAllPublishedItems` memoises, so a build does not refetch this per route.
+  const items = await getAllPublishedItems()
+  const paletteItems = items.map((item) => ({
+    number: item.number,
+    title: item.title,
+    createdAt: item.createdAt,
+  }))
+
   return (
     <ViewTransitions>
       <html lang="ko">
@@ -41,6 +52,7 @@ export default function RootLayout({
             <main className="mx-auto w-full max-w-[60ch]">{children}</main>
             <Footer />
           </div>
+          <SearchPalette items={paletteItems} />
         </body>
       </html>
     </ViewTransitions>
