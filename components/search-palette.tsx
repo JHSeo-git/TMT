@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useDocsSearch } from "fumadocs-core/search/client"
-import { SearchIcon } from "lucide-react"
+import { Loader2Icon, SearchIcon } from "lucide-react"
 import { useTransitionRouter } from "next-view-transitions"
 
 import { cn } from "@/lib/utils"
@@ -167,7 +167,12 @@ export function SearchProvider({
     router.push(url)
   }
 
-  const loading = typing && query.isLoading && bodyRows.length === 0
+  /**
+   * `useDocsSearch` keys its request on the debounced value, so `isLoading` turns true only once
+   * the request is actually out — not while the debounce is still counting. That makes it safe to
+   * show as a spinner rather than a placeholder that flickers on every keystroke.
+   */
+  const loading = typing && query.isLoading
 
   const openSearch = React.useCallback(() => setOpen(true), [])
 
@@ -182,11 +187,24 @@ export function SearchProvider({
         description="Find a page by title, or search the text inside one."
       >
         <Command filter={filter}>
-          <CommandInput
-            value={search}
-            onValueChange={setSearch}
-            placeholder="Search the archive…"
-          />
+          {/* The spinner is positioned over the input rather than added to its `InputGroup`, which
+              would mean editing the vendored component. This is how shadcn's own menu does it. */}
+          <div className="relative">
+            <CommandInput
+              value={search}
+              onValueChange={setSearch}
+              placeholder="Search the archive…"
+            />
+            {loading && (
+              <div className="pointer-events-none absolute top-1/2 right-3 z-10 -translate-y-1/2">
+                <Loader2Icon
+                  role="status"
+                  aria-label="Searching"
+                  className="text-muted-foreground size-4 animate-spin"
+                />
+              </div>
+            )}
+          </div>
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
 
@@ -202,28 +220,20 @@ export function SearchProvider({
               ))}
             </CommandGroup>
 
-            {typing && (loading || bodyRows.length > 0) && (
+            {bodyRows.length > 0 && (
               <>
                 <CommandSeparator />
                 <CommandGroup heading="Text">
-                  {loading ? (
-                    <div className="text-muted-foreground px-2 py-1.5 text-sm">Searching…</div>
-                  ) : (
-                    bodyRows.map((result) => (
-                      <CommandItem
-                        key={result.id}
-                        value={result.id}
-                        onSelect={() => go(result.url)}
-                      >
-                        {/* The chunk is muted so the matched run reads as the highlight without
+                  {bodyRows.map((result) => (
+                    <CommandItem key={result.id} value={result.id} onSelect={() => go(result.url)}>
+                      {/* The chunk is muted so the matched run reads as the highlight without
                           needing a colour of its own, and clamped to one line so every row keeps
                           the 32px height the rest of the list has. */}
-                        <span className="text-muted-foreground line-clamp-1">
-                          <Highlight text={result.content} />
-                        </span>
-                      </CommandItem>
-                    ))
-                  )}
+                      <span className="text-muted-foreground line-clamp-1">
+                        <Highlight text={result.content} />
+                      </span>
+                    </CommandItem>
+                  ))}
                 </CommandGroup>
               </>
             )}

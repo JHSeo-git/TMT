@@ -4,6 +4,13 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-09-04 - The palette shows a spinner while the text search is out
+
+- Body results arrive over the network, so between the keystroke and the `Text` group appearing there was nothing to say why. A spinner now sits at the right edge of the input while the request is in flight, which is where shadcn's own command menu puts one: the input wrapped in a `relative` container, the spinner absolutely positioned and `pointer-events-none`, driven by `query.isLoading`.
+- The timing is right for it because of how `useDocsSearch` works. It keys its request on the debounced value, so `isLoading` turns true only once the request is actually out, never while the 200ms debounce is still counting. A spinner tied to raw keystrokes would strobe; this one does not.
+- Measured on a cold instance, where it earns its keep: visible for 5.3 seconds, 16px, vertically centred against the input, animating. On a warm one the request takes 72ms and the spinner flashes for exactly that long — honest rather than annoying, and the same thing shadcn's users see, since their requests are fast too.
+- The `Searching…` row that used to appear inside the `Text` group is gone. It made the group show up empty and then fill, two layout shifts where the spinner needs none; the group now appears only once it has rows. `lucide-react`'s `Loader2Icon` with `animate-spin` stands in for shadcn's `Spinner` component, which is that icon and that class and nothing else.
+
 ## 2026-09-04 - An empty package and a commented-out stylesheet leave
 
 - `hast` is gone from `dependencies`. The package at that name is a stub — its description reads "Renamed to rehype" and it ships nothing but a `package.json` and a readme, with no `main` and no `types` — so `import type { Element, Root } from "hast"` in the two rehype plugins was always resolving through `@types/hast` instead. Confirmed by moving the package aside and building: TypeScript and all 299 pages pass without it. A type-only import listed as a production dependency, pointing at an empty package.
