@@ -9,13 +9,13 @@
   },
   "type": "module",
   "scripts": {
-    "build": "bun run scripts/generate-search-index.ts --force && next build",
-    "dev": "bun run scripts/generate-search-index.ts && next dev --turbopack",
+    "build": "bun run search-index --force && next build",
+    "dev": "bun run search-index && next dev --turbopack",
     "format:check": "prettier --check \"**/*.{ts,tsx,mdx,json}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,mdx,json}\" --cache",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "search-index": "bun run scripts/generate-search-index.ts --force",
+    "search-index": "bun run scripts/generate-search-index.ts",
     "start": "next start"
   },
   "dependencies": {

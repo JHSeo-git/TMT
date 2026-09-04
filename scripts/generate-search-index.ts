@@ -8,9 +8,10 @@
  * `FUNCTION_INVOCATION_TIMEOUT`. Everything up to Orama is deterministic for a given deployment,
  * so it happens here instead and the route is left with the part that cannot be precomputed.
  *
- * Run from the repository root; bun reads `.env` automatically. `--force` regenerates an existing
- * file, which is what the build does; without it an existing file is left alone so that starting
- * the dev server does not spend four seconds on GitHub every time.
+ * Run from the repository root as `bun run search-index`; bun reads `.env` automatically. `--force`
+ * regenerates an existing file, which is what `bun run search-index --force` in the `build` script
+ * does; without it an existing file is left alone, so starting the dev server does not spend four
+ * seconds on GitHub every time. Delete the file or pass the flag to refresh it by hand.
  */
 import { mkdir, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
