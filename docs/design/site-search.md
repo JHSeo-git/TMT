@@ -17,7 +17,7 @@ items, average 8,306 characters of body and eleven headings each.
 | Warm query | 2–27ms against the real archive, by term | Once built, the route is not the bottleneck |
 | Cold query, end to end | 5.0–5.7s (3.2s of GitHub requests, then the build) | The fetch costs more than the build does |
 | Index process RSS | 413MB | Function memory is a thing to watch after deploy |
-| Titles and dates, 293 items | 35KB, 9KB gzipped, as served | Cheap enough to send with every page |
+| Titles, 293 items | 24KB, 7KB gzipped, as served | Cheap enough to send with every page |
 | Body text capped at 2,000 chars | 1.5MB / 330KB gzipped | A trimmed static index is possible but gives up full-text |
 
 The first row is the whole reason the search runs on the server, and the last row is the reason it
@@ -27,8 +27,10 @@ is not worth trying to avoid that. The fifth row is the reason there is a first 
 
 The first tier costs nothing extra. Once the list at `/` renders all 293 items, their titles are
 already in the HTML; the palette receives the same array from `app/layout.tsx` so it works on item
-pages too, at 9KB gzipped per page — 35KB raw, measured against the deployed build of the same
-item. Filtering is exact and instant, which is what finding a known item wants.
+pages too, at 7KB gzipped per page — 24KB raw, measured against the deployed build of the same
+item. It carries a number and a title and nothing else; the dates the rows used to show cost
+2.5KB gzipped on every page and told you nothing you were searching for. Filtering is exact and
+instant, which is what finding a known item wants.
 
 Putting it in the layout has one cost worth naming, because getting it wrong is expensive rather
 than merely untidy. `app/layout.tsx` is currently a synchronous component with no fetch in it, and
@@ -37,7 +39,7 @@ of the ~298 prerendered pages — three GitHub requests each, near 900 for a bui
 So `getAllPublishedItems` memoises its promise at module scope. That is a requirement of this
 design, not an optimisation; Next builds across several workers, so the result is a handful of
 fetches rather than one, and still nowhere near the hourly limit of 5,000. The alternative, if
-9KB on every page ever becomes the thing to cut, is a generated static JSON the palette fetches
+7KB on every page ever becomes the thing to cut, is a generated static JSON the palette fetches
 when it first opens, which trades an instant first tier on first open for zero page weight.
 
 The second tier is `useDocsSearch({ type: "fetch", delayMs: 200 })` against `/api/search`. The

@@ -35,13 +35,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Trimmed to what the palette's title search needs. Sending all 293 costs about 10KB gzipped on
-  // every page, and `getAllPublishedItems` memoises, so a build does not refetch this per route.
+  // Trimmed to what the palette's title search needs — a number and a title, nothing else. That
+  // costs a few KB gzipped on every page, and `getAllPublishedItems` memoises, so a build does not
+  // refetch this per route.
   const items = await getAllPublishedItems()
   const paletteItems = items.map((item) => ({
     number: item.number,
     title: item.title,
-    createdAt: item.createdAt,
   }))
 
   return (

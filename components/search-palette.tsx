@@ -18,7 +18,6 @@ import {
 export interface PaletteItem {
   number: number
   title: string
-  createdAt: string
 }
 
 /**
@@ -160,27 +159,22 @@ export function SearchPalette({ items }: { items: PaletteItem[] }) {
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="아카이브 검색"
-      description="제목으로 아이템을 찾거나 본문을 검색합니다."
+      title="Search the archive"
+      description="Find a page by title, or search the text inside one."
     >
       <Command filter={filter}>
-        <CommandInput value={search} onValueChange={setSearch} placeholder="아카이브 검색…" />
+        <CommandInput value={search} onValueChange={setSearch} placeholder="Search the archive…" />
         <CommandList>
-          <CommandEmpty>결과가 없습니다.</CommandEmpty>
+          <CommandEmpty>No results found.</CommandEmpty>
 
-          <CommandGroup heading={typing ? "아이템" : "최근"}>
+          <CommandGroup heading={typing ? "Pages" : "Recent"}>
             {titleRows.map((item) => (
               <CommandItem
                 key={item.number}
                 value={item.title}
                 onSelect={() => go(`/i/${item.number}`)}
               >
-                <span className="line-clamp-1 flex-1">{item.title}</span>
-                {/* `CommandShortcut`'s treatment, kept on a `time` element so the date stays a
-                    date. It brightens with the row the way that component does. */}
-                <time className="text-muted-foreground group-data-selected/command-item:text-foreground ml-auto text-xs tracking-widest tabular-nums">
-                  {item.createdAt.slice(0, 10).replace(/-/g, ".")}
-                </time>
+                <span className="line-clamp-1">{item.title}</span>
               </CommandItem>
             ))}
           </CommandGroup>
@@ -188,9 +182,9 @@ export function SearchPalette({ items }: { items: PaletteItem[] }) {
           {typing && (loading || bodyRows.length > 0) && (
             <>
               <CommandSeparator />
-              <CommandGroup heading="본문">
+              <CommandGroup heading="Text">
                 {loading ? (
-                  <div className="text-muted-foreground px-2 py-1.5 text-sm">검색 중…</div>
+                  <div className="text-muted-foreground px-2 py-1.5 text-sm">Searching…</div>
                 ) : (
                   bodyRows.map((result) => (
                     <CommandItem key={result.id} value={result.id} onSelect={() => go(result.url)}>
