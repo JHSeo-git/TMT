@@ -4,6 +4,14 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-09-04 - The publish gate is checked when an item renders
+
+- `/i/270`, `/i/292`, and `/i/302` answered `200` with a fully rendered body while carrying no `published` label, so none of them appeared in the list. One is a personal record and two are scratch items, which means counting from `/i/1` to `/i/321` walked the whole of a private archive. All three now answer `404`, and `/i/321` and `/i/1` still render.
+- Two things had to line up. `getIssueByNo` called `issues.get` and returned whatever came back, checking neither `state` nor the publish gate — the gate was applied by `getIssues` when building the list, and an item fetched by number never passed through it. And `generateStaticParams` prerenders only published items, but Next's `dynamicParams` defaults to `true`, so a number missing from that set is not a 404: it is a page rendered on demand.
+- The gate went into `getIssueByNo` rather than into the page. It has one caller, and nothing else in the app fetches a single issue, so there is no consumer that wants the ungated version. A GitHub 404 and a gate rejection both come back as `null`, which let `loadIssue` drop its `status === 404` sniffing: three reasons for a bad URL now take one path.
+- Reasoning and the options that were turned down are in `docs/adr/0003-the-publish-gate-is-checked-when-an-item-renders.md`. `dynamicParams = false` was the tempting one-liner and is worth having as a second layer, but not as the only one — it makes the reason for the 404 "it was not in the build" instead of "it is not published", and an item published between deploys would 404 until the next build.
+- Noted while verifying: `#302` appears in this changelog's heading-rail entry as a test case for an item with no headings. An unpublished item was reachable while the site was being worked on, and that is how it was used. Checking one now means running the app locally.
+
 ## 2026-09-03 - Class names merge through `cn`
 
 - `lib/utils.ts` now re-exports `cn` from the package of that name instead of composing `clsx` and `tailwind-merge` itself, and those two packages are dropped. `cn` is shadcn's own compiled drop-in for the pair, published 2026-09-02 from `shadcn-ui/cn` — worth noting because `cn` is a generic enough name on npm to deserve a second look, and because the package ships a `bin` (a CLI for compiling its class tables) which reads oddly for a class-name helper.

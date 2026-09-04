@@ -120,7 +120,17 @@ export async function getIssues({ page = 1, per_page = 100 }: GetIssuesParams = 
   }
 }
 
+/**
+ * The item behind a number, or `null` when there is none and when the publish gate does not let it
+ * through.
+ *
+ * The gate is expressed here rather than at the page because nothing else fetches a single issue,
+ * and a function handing back unpublished items would need the check restated at every call site
+ * added later. See `docs/adr/0003-the-publish-gate-is-checked-when-an-item-renders.md`.
+ */
 export async function getIssueByNo(issueNo: number) {
+  let issue: Awaited<ReturnType<Octokit["rest"]["issues"]["get"]>>["data"]
+
   try {
     const response = await octokit.rest.issues.get({
       owner,
@@ -128,30 +138,40 @@ export async function getIssueByNo(issueNo: number) {
       issue_number: issueNo,
     })
 
-    const issue = response.data
-
-    return {
-      id: issue.node_id,
-      number: issue.number,
-      title: issue.title,
-      createdAt: issue.created_at,
-      labels: {
-        nodes: toLabelNodes(issue.labels),
-      },
-      updatedAt: issue.updated_at,
-      body: issue.body,
-      author: {
-        login: issue.user?.login,
-        avatarUrl: issue.user?.avatar_url,
-      },
-      comments: {
-        totalCount: issue.comments,
-      },
-      issueUrl: issue.html_url,
-    }
+    issue = response.data
   } catch (error) {
-    console.error("failed to fetch(fetchIssue): ", error)
+    if ((error as { status?: number }).status === 404) {
+      return null
+    }
+
+    console.error("failed to fetch(getIssueByNo): ", error)
     throw error
+  }
+
+  const labels = toLabelNodes(issue.labels)
+
+  if (issue.state !== "open" || !labels.some((label) => label.name === PUBLISH_GATE_LABEL)) {
+    return null
+  }
+
+  return {
+    id: issue.node_id,
+    number: issue.number,
+    title: issue.title,
+    createdAt: issue.created_at,
+    labels: {
+      nodes: labels,
+    },
+    updatedAt: issue.updated_at,
+    body: issue.body,
+    author: {
+      login: issue.user?.login,
+      avatarUrl: issue.user?.avatar_url,
+    },
+    comments: {
+      totalCount: issue.comments,
+    },
+    issueUrl: issue.html_url,
   }
 }
 

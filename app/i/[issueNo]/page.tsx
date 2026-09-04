@@ -28,9 +28,10 @@ interface PageProps {
 }
 
 /**
- * Resolves the route's issue or renders the not-found page. An unparseable number and a number with
- * no issue behind it are both a bad URL rather than a server fault, so this route answers 404 for
- * either. Every other failure keeps travelling to the error boundary.
+ * Resolves the route's item or renders the not-found page. An unparseable number, a number with no
+ * item behind it, and an item the publish gate rejects are all a bad URL rather than a server
+ * fault, so this route answers 404 for each. Every other failure keeps travelling to the error
+ * boundary.
  */
 async function loadIssue(params: PageProps["params"]) {
   const issueNo = parseInt((await params).issueNo, 10)
@@ -39,14 +40,13 @@ async function loadIssue(params: PageProps["params"]) {
     notFound()
   }
 
-  try {
-    return await getIssueByNo(issueNo)
-  } catch (error) {
-    if ((error as { status?: number }).status === 404) {
-      notFound()
-    }
-    throw error
+  const issue = await getIssueByNo(issueNo)
+
+  if (!issue) {
+    notFound()
   }
+
+  return issue
 }
 
 export async function generateMetadata({ params }: PageProps) {
