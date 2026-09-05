@@ -262,8 +262,13 @@ export function SearchTrigger({ className }: { className?: string }) {
       // `h-8` and the radius match the `sm` button beside it so the pair sits flush. Filled rather
       // than outlined: this opens a search field, and reading as one tells you that before the
       // label does.
+      //
+      // Hidden below `sm`. It asks for 160px of a 311px header on a 375px screen, and the shortcut
+      // it advertises needs a keyboard, so on a phone it is a wide button naming something you
+      // cannot press. Note that this leaves no way into search there, since `⌘K` and `/` both want
+      // a keyboard too.
       className={cn(
-        "bg-muted text-muted-foreground hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex h-8 w-40 items-center gap-2 rounded-[min(var(--radius-md),10px)] pr-1.5 pl-2.5 text-sm transition-colors focus-visible:ring-[3px] focus-visible:outline-none",
+        "bg-muted text-muted-foreground hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 hidden h-8 w-40 items-center gap-2 rounded-[min(var(--radius-md),10px)] pr-1.5 pl-2.5 text-sm transition-colors focus-visible:ring-[3px] focus-visible:outline-none sm:flex",
         className
       )}
     >
