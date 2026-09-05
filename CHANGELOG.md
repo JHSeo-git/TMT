@@ -4,6 +4,11 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-09-05 - The search button steps out below `sm`
+
+- On a 375px screen the search button asked for 160px of a 311px header, and the shortcut it advertises needs a keyboard, so on a phone it was a wide button naming something you cannot press — `⌘K` and all, since the platform check matches an iPhone. It is `hidden sm:flex` now, which is the same call the item page's `Last updated on` makes with `hidden sm:block`. Verified at both edges: `display: none` at 375px, `flex` at 160px wide and flush with `New` at 640px, no overflow either side.
+- Worth being plain that this leaves no way into search on a phone, because `⌘K` and `/` both want a keyboard. If that matters more than the width, the button can shrink to a 32px square with just the icon below `sm` instead of leaving — which is what shadcn and Fumadocs both do in their own headers.
+
 ## 2026-09-04 - Search scans the archive instead of indexing it
 
 - `/api/search` answered `FUNCTION_INVOCATION_TIMEOUT` in production. Two attempts at fixing it are worth recording, because the second one is the interesting failure. The route had been assembling its entries on every cold start — three GitHub requests for 293 bodies, then `structure()` over each — which measured 4.8s locally. Moving that to build time, into `scripts/generate-search-index.ts` and a gitignored 4.78MB JSON the route imports, cut the local cold path to 1.2s. It still timed out.
