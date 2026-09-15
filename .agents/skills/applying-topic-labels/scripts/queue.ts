@@ -65,29 +65,106 @@ interface Item {
   labels: string[]
 }
 
+/** How many times an incomplete read is retried before a command refuses to report numbers. */
+const FETCH_ATTEMPTS = 3
+/** Stops a runaway cursor walk. Far above what this archive needs. */
+const MAX_PAGES = 100
+/** Labels read per issue. An item carries a handful, and the query checks rather than assumes. */
+const LABELS_PER_ISSUE = 50
+
+interface IssuePage {
+  repository: {
+    issues: {
+      totalCount: number
+      pageInfo: { hasNextPage: boolean; endCursor: string | null }
+      nodes: { number: number; title: string; labels: IssueLabels }[]
+    }
+  }
+}
+
+interface IssueLabels {
+  totalCount: number
+  nodes: { name: string }[]
+}
+
+const ISSUES_QUERY = `query ($owner: String!, $repo: String!, $cursor: String) {
+  repository(owner: $owner, name: $repo) {
+    issues(first: 100, after: $cursor, states: [OPEN, CLOSED]) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      nodes {
+        number
+        title
+        labels(first: ${LABELS_PER_ISSUE}) {
+          totalCount
+          nodes {
+            name
+          }
+        }
+      }
+    }
+  }
+}`
+
 /**
  * Fetches every issue and filters locally rather than using the label query parameter. A stale
- * label filter index has dropped an item silently before (ADR 0002, issue #109). At this size the
- * full fetch is four pages, so it costs almost nothing.
+ * label filter index has dropped an item silently before (ADR 0002, issue #109).
+ *
+ * It reads through GraphQL because the REST list endpoint could not be trusted to hand over the
+ * whole archive. `octokit.paginate` follows `rel="next"`, and on this repository that link goes
+ * missing while pages remain: page 3 came back with 99 items and only a `prev` link while page 4
+ * still held 40. Consecutive runs counted 100, 200, 299 and 338 items for one unchanged archive,
+ * and whole first pages came back empty. A short read does more damage than a loud failure here,
+ * because `enqueue` skips every item it never saw while the queue reads as finished. The GraphQL
+ * connection carries `totalCount` alongside the nodes, so each read proves its own completeness
+ * and an incomplete one refuses to report.
  */
 async function fetchAll(): Promise<Item[]> {
-  const issues = await octokit.paginate(octokit.rest.issues.listForRepo, {
-    owner,
-    repo,
-    state: "all",
-    per_page: 100,
-  })
+  for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt++) {
+    const found = new Map<number, Item>()
+    let expected = 0
+    let cursor: string | null = null
 
-  return issues
-    .filter((issue) => !issue.pull_request)
-    .map((issue) => ({
-      number: issue.number,
-      title: issue.title,
-      labels: issue.labels.flatMap((label) => {
-        const name = typeof label === "string" ? label : label.name
-        return name ? [name] : []
-      }),
-    }))
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      // Annotated rather than inferred: `cursor` is fed back in from the response below, and
+      // letting the call infer its own return type closes that into a circular reference.
+      const response: IssuePage = await octokit.graphql(ISSUES_QUERY, { owner, repo, cursor })
+      const { totalCount, pageInfo, nodes } = response.repository.issues
+      expected = totalCount
+
+      for (const node of nodes) {
+        if (node.labels.totalCount > node.labels.nodes.length) {
+          fail(
+            `#${node.number} carries ${node.labels.totalCount} labels, past the ` +
+              `${LABELS_PER_ISSUE} this query reads. Raise LABELS_PER_ISSUE.`
+          )
+        }
+        found.set(node.number, {
+          number: node.number,
+          title: node.title,
+          labels: node.labels.nodes.map((label) => label.name),
+        })
+      }
+
+      if (!pageInfo.hasNextPage) break
+      cursor = pageInfo.endCursor
+    }
+
+    // Newest first, the order the archive was read in before this.
+    if (found.size >= expected) return [...found.values()].sort((a, b) => b.number - a.number)
+
+    console.error(
+      `  read ${found.size} of ${expected} issues, retrying (${attempt}/${FETCH_ATTEMPTS})`
+    )
+  }
+
+  fail(
+    `could not read the archive whole in ${FETCH_ATTEMPTS} attempts, so every count below it ` +
+      "would be short. Nothing ran."
+  )
 }
 
 const has = (item: Item, label: string) => item.labels.includes(label)
