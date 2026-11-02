@@ -4,6 +4,14 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-11-02 - Dependencies move to their latest compatible stable versions
+
+- Updated 18 direct dependencies and refreshed `bun.lock`, including Next.js and its ESLint config to 16.4.3, React and React DOM to 19.3.1, Fumadocs to 16.17.9, Base UI to 1.9.0, and `cn` to 0.5.1.
+- Selected Node.js 26.13.0, the latest LTS release, in `.nvmrc`; `engines.node: "26.x"` keeps Vercel on that LTS line. Bun remains the package manager, and the README now documents setup and validation.
+- Kept ESLint 9.39.5 and TypeScript 6.0.3, the highest versions supported by the current lint plugins: `eslint-plugin-react` does not support ESLint 10, and `typescript-eslint` requires TypeScript below 6.1.
+- Node 26 passes a fresh frozen install, lint, type check, and production build of all 345 pages; all 817 installed packages satisfy their dependency and Node ranges. The list and a representative item retain their visible text and links, and browser checks cover search highlighting and keyboard navigation to a heading. The build reports two upstream CSS optimizer warnings for Fumadocs' `::highlight` selectors.
+- `bun audit` drops from 63 advisories to two: [deepmerge has no patched release](https://github.com/advisories/GHSA-gcqx-w48m-w2h4), and [minimatch's fix requires 11.0.1 or later](https://github.com/advisories/GHSA-g3hv-75wg-m249), outside its consumers' declared ranges. Both remain visible for follow-up rather than forcing incompatible transitive versions.
+
 ## 2026-09-15 - The work queue could not be trusted to count the archive
 
 - `queue.ts status` reported 338, 299, 100, 200 and 200 items for one unchanged archive across five consecutive runs. `enqueue` reads through the same `fetchAll`, so a short read would have queued nothing while the queue read as finished — the failure this whole path exists to prevent. Found while labeling #338, #339 and #340: `queued: 0` after the third apply was true, and three runs later the same command described a hundred-item archive with equal confidence.
