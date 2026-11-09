@@ -4,6 +4,10 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-11-09 - An hourglass favicon for TMT
+
+- Replaced the default favicon with a white hourglass inside a black circle, reflecting “Taking my time”; the ICO includes seven sizes from 16 to 256px, with the editable SVG in `docs/images/favicon.svg`.
+
 ## 2026-11-02 - Dependencies move to their latest compatible stable versions
 
 - Updated 18 direct dependencies and refreshed `bun.lock`, including Next.js and its ESLint config to 16.4.3, React and React DOM to 19.3.1, Fumadocs to 16.17.9, Base UI to 1.9.0, and `cn` to 0.5.1.
