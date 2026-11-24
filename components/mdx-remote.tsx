@@ -4,6 +4,7 @@ import { Tweet as ReactTweet } from "react-tweet"
 import recmaMdxHtmlOverride from "recma-mdx-html-override"
 
 import { GITHUB_ASSET_URL_PREFIX, resolveAssetUrl } from "@/lib/github"
+import { rehypeCodeOptions } from "@/lib/rehype-code-options"
 import rehypeGhImage from "@/lib/rehype-gh-image"
 import rehypeGhVideo from "@/lib/rehype-gh-video"
 import { cn } from "@/lib/utils"
@@ -155,6 +156,7 @@ export const components = {
 }
 
 export const compiler = createCompiler({
+  rehypeCodeOptions,
   remarkPlugins: [[remarkImage, { onError: "ignore" }]],
   rehypePlugins: [rehypeGhImage, rehypeGhVideo],
   recmaPlugins: [

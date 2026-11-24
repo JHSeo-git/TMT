@@ -202,6 +202,12 @@ input[type="email"] {
   .markdown-body {
     --default-mono-font-family: var(--font-geist-mono);
 
+    [data-wrap-code] pre {
+      width: 100%;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
     sup {
       a[data-footnote-ref="true"] {
         @apply text-link;

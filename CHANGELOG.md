@@ -4,6 +4,10 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-11-18 - Optional line wrapping for code blocks
+
+- Add `wrap` after the language in a code fence to wrap long lines on the site while preserving the original text when copied, for example `text wrap` for prompts.
+
 ## 2026-11-09 - An hourglass favicon for TMT
 
 - Replaced the default favicon with a white hourglass inside a black circle, reflecting “Taking my time”; the ICO includes seven sizes from 16 to 256px, with the editable SVG in `docs/images/favicon.svg`.
