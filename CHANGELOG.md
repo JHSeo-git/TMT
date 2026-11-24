@@ -4,6 +4,11 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-11-24 - Dependencies move to their latest compatible stable versions
+
+- Updated Next.js and its ESLint config to 16.4.6, clearing seven Next.js advisories, along with Fumadocs 16.19.7, Tailwind CSS 4.3.5, `lucide-react` 1.79.0, Prettier 3.10.1, PostCSS 8.5.33, and `cn` 0.5.2.
+- Kept ESLint 9 and TypeScript 6.0 because `eslint-plugin-react`, `eslint-plugin-import`, and `eslint-plugin-jsx-a11y` still stop at ESLint 9 and `typescript-eslint` requires TypeScript below 6.1; KaTeX stays on 0.16 so its stylesheet matches the renderer that `rehype-katex` uses.
+
 ## 2026-11-24 - Math rendering in items
 
 - Render LaTeX math with KaTeX from `$$...$$` (inline or on its own lines) and ```` ```math ```` fences, so items with formulas no longer break the build; a single `$` stays plain text so prices like `$0.20` are untouched.
