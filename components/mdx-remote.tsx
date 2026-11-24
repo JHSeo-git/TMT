@@ -2,6 +2,8 @@ import { createCompiler } from "@fumadocs/mdx-remote"
 import { remarkImage } from "fumadocs-core/mdx-plugins"
 import { Tweet as ReactTweet } from "react-tweet"
 import recmaMdxHtmlOverride from "recma-mdx-html-override"
+import rehypeKatex from "rehype-katex"
+import remarkMath from "remark-math"
 
 import { GITHUB_ASSET_URL_PREFIX, resolveAssetUrl } from "@/lib/github"
 import { rehypeCodeOptions } from "@/lib/rehype-code-options"
@@ -157,8 +159,12 @@ export const components = {
 
 export const compiler = createCompiler({
   rehypeCodeOptions,
-  remarkPlugins: [[remarkImage, { onError: "ignore" }]],
-  rehypePlugins: [rehypeGhImage, rehypeGhVideo],
+  remarkPlugins: [
+    [remarkMath, { singleDollarTextMath: false }],
+    [remarkImage, { onError: "ignore" }],
+  ],
+  // KaTeX must render math fences before the preset's syntax highlighter sees them.
+  rehypePlugins: (v) => [rehypeKatex, rehypeGhImage, rehypeGhVideo, ...v],
   recmaPlugins: [
     [
       recmaMdxHtmlOverride,

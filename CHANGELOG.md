@@ -4,6 +4,10 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-11-24 - Math rendering in items
+
+- Render LaTeX math with KaTeX from `$$...$$` (inline or on its own lines) and ```` ```math ```` fences, so items with formulas no longer break the build; a single `$` stays plain text so prices like `$0.20` are untouched.
+
 ## 2026-11-18 - Optional line wrapping for code blocks
 
 - Add `wrap` after the language in a code fence to wrap long lines on the site while preserving the original text when copied, for example `text wrap` for prompts.
