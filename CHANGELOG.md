@@ -4,6 +4,10 @@ summary: Timeline of changes to the TMT site and its item archive.
 
 # Changelog
 
+## 2026-11-26 - Editorial typography hero image for the README
+
+- Replaced `docs/images/hero.jpg` with a centered editorial serif `TMT` wordmark and vermilion proofreader's edit (“One acronym, ~~one~~ too many meanings.”) on warm archival paper, cutting the file size from 152 KB to 47 KB at 1600×720.
+
 ## 2026-11-24 - Dependencies move to their latest compatible stable versions
 
 - Updated Next.js and its ESLint config to 16.4.6, clearing seven Next.js advisories, along with Fumadocs 16.19.7, Tailwind CSS 4.3.5, `lucide-react` 1.79.0, Prettier 3.10.1, PostCSS 8.5.33, and `cn` 0.5.2.
